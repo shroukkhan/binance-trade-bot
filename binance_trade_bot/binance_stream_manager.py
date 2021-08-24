@@ -514,10 +514,10 @@ class DepthListener(AsyncListener):
             await self.depth_cache_managers[data["symbol"]].process_data(data)
 
     async def handle_signal(self, signal):
-        for dcm in self.depth_cache_managers.values():  # switch every dcm to backpressure
+        dcms = self.depth_cache_managers.values()
+        for dcm in dcms:  # switch every dcm to backpressure
             dcm.notify_pending_signal()
-        for dcm in self.depth_cache_managers.values():
-            asyncio.create_task(dcm.process_signal(signal))
+        await asyncio.wait([asyncio.create_task(dcm.process_signal(signal)) for dcm in dcms])
 
 
 class BinanceStreamManager:
@@ -572,7 +572,7 @@ class AutoReplacingStream(LoopExecutor):  # pylint:disable=too-few-public-method
         self.api_key = api_key
         self.api_secret = api_secret
         self.stream_buffer_name = stream_buffer_name
-        self.last_stream_id = self.last_stream_id = self.bwam.create_stream(
+        self.last_stream_id = self.bwam.create_stream(
             channels, markets, api_key=api_key, api_secret=api_secret, stream_buffer_name=stream_buffer_name
         )
 
