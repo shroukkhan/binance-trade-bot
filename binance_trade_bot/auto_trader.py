@@ -237,9 +237,14 @@ class AutoTrader(ABC):
                 to_coin.symbol, self.config.BRIDGE.symbol, False
             )
 
-            ratio_dict[(coin.idx, to_coin.idx)] = (
-                coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
-            ) - ratio
+            if self.config.USE_MARGIN == "yes":
+                ratio_dict[(coin.idx, to_coin.idx)] = (
+                    (1 - transaction_fee) * coin_opt_coin_ratio / ratio - 1 - self.config.SCOUT_MULTIPLIER / 100
+                )
+            else:
+                ratio_dict[(coin.idx, to_coin.idx)] = (
+                    coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
+                ) - ratio
 
         if len(scout_logs) > 0:
             self.db.batch_log_scout(scout_logs)
