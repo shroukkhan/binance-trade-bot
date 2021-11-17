@@ -239,7 +239,7 @@ class AutoTrader(ABC):
 
             if self.config.USE_MARGIN == "yes":
                 ratio_dict[(coin.idx, to_coin.idx)] = (
-                    (1 - transaction_fee) * coin_opt_coin_ratio / ratio - 1 - self.config.SCOUT_MULTIPLIER / 100
+                    (1 - transaction_fee) * coin_opt_coin_ratio / ratio - 1 - self.config.SCOUT_MARGIN / 100
                 )
             else:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
