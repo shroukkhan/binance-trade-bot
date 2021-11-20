@@ -5,7 +5,6 @@ from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integ
 from sqlalchemy.orm import relationship
 
 from .base import Base
-from .coin import Coin
 
 
 class TradeState(enum.Enum):
@@ -36,9 +35,9 @@ class Trade(Base):  # pylint: disable=too-few-public-methods
 
     datetime = Column(DateTime)
 
-    def __init__(self, alt_coin: Coin, crypto_coin: Coin, selling: bool):
-        self.alt_coin = alt_coin
-        self.crypto_coin = crypto_coin
+    def __init__(self, alt_coin: str, crypto_coin: str, selling: bool):
+        self.alt_coin_id = alt_coin
+        self.crypto_coin_id = crypto_coin
         self.state = TradeState.STARTING
         self.selling = selling
         self.datetime = datetime.utcnow()
@@ -46,8 +45,8 @@ class Trade(Base):  # pylint: disable=too-few-public-methods
     def info(self):
         return {
             "id": self.id,
-            "alt_coin": self.alt_coin.info(),
-            "crypto_coin": self.crypto_coin.info(),
+            "alt_coin": self.alt_coin_id,
+            "crypto_coin": self.crypto_coin_id,
             "selling": self.selling,
             "state": self.state.value,
             "alt_starting_balance": self.alt_starting_balance,

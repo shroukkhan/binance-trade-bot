@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 
 from binance_trade_bot.auto_trader import AutoTrader
+from binance_trade_bot.ratios import CoinStub
 
 
 class Strategy(AutoTrader):
@@ -15,6 +16,7 @@ class Strategy(AutoTrader):
         Scout for potential jumps from the current coin to another coin
         """
         current_coin = self.db.get_current_coin()
+        current_coin_amount = self.manager.get_currency_balance(current_coin.symbol)
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
         print(
@@ -23,13 +25,22 @@ class Strategy(AutoTrader):
             end="\r",
         )
 
-        current_coin_price = self.manager.get_ticker_price(current_coin + self.config.BRIDGE)
+        current_coin_price, current_coin_quote = self.manager.get_market_sell_price(
+            current_coin + self.config.BRIDGE, current_coin_amount
+        )
 
         if current_coin_price is None:
             self.logger.info("Skipping scouting... current coin {} not found".format(current_coin + self.config.BRIDGE))
             return
+        if current_coin_amount * current_coin_price < self.manager.get_min_notional(
+            current_coin.symbol, self.config.BRIDGE.symbol
+        ):
+            self.logger.info(f"Current coin {current_coin.symbol} amount is below min notional, skip scouting")
+            return
 
-        self._jump_to_best_coin(current_coin, current_coin_price)
+        self._jump_to_best_coin(
+            CoinStub.get_by_symbol(current_coin.symbol), current_coin_price, current_coin_quote, current_coin_amount
+        )
 
     def bridge_scout(self):
         current_coin = self.db.get_current_coin()
@@ -62,6 +73,8 @@ class Strategy(AutoTrader):
                 current_coin = self.db.get_current_coin()
                 self.logger.info(f"Purchasing {current_coin} to begin trading")
                 self.manager.buy_alt(
-                    current_coin, self.config.BRIDGE, self.manager.get_ticker_price(current_coin + self.config.BRIDGE)
+                    current_coin.symbol,
+                    self.config.BRIDGE.symbol,
+                    self.manager.get_ticker_price(current_coin.symbol + self.config.BRIDGE.symbol),
                 )
                 self.logger.info("Ready to start trading")
