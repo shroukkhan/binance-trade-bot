@@ -1,8 +1,10 @@
+
+import asyncio
 import sys
 import threading
 import time
-from contextlib import contextmanager
-from typing import Dict, Set, Tuple
+from contextlib import asynccontextmanager, contextmanager
+from typing import Dict, Set, Tuple, Optional
 
 import binance.client
 from binance.exceptions import BinanceAPIException, BinanceRequestException
@@ -11,6 +13,38 @@ from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 from .config import Config
 from .logger import Logger
 
+class ThreadSafeAsyncLock:
+    def __init__(self):
+        self._init_lock = threading.Lock()
+        self._async_lock: Optional[asyncio.Lock] = None
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
+
+    def attach_loop(self):
+        with self._init_lock:
+            self._async_lock = asyncio.Lock()
+            self.loop = asyncio.get_running_loop()
+
+    def acquire(self):
+        self.__enter__()
+
+    def release(self):
+        self.__exit__(None, None, None)
+
+    def __enter__(self):
+        self._init_lock.__enter__()
+        if self._async_lock is not None:
+            asyncio.run_coroutine_threadsafe(self._async_lock.__aenter__(), self.loop).result()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._async_lock is not None:
+            asyncio.run_coroutine_threadsafe(self._async_lock.__aexit__(exc_type, exc_val, exc_tb), self.loop).result()
+        self._init_lock.__exit__(exc_type, exc_val, exc_tb)
+
+    async def __aenter__(self):
+        await self._async_lock.__aenter__()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._async_lock.__aexit__(exc_type, exc_val, exc_tb)
 
 class BinanceOrder:  # pylint: disable=too-few-public-methods
     def __init__(self, report):
@@ -23,21 +57,34 @@ class BinanceOrder:  # pylint: disable=too-few-public-methods
         self.status = report["current_order_status"]
         self.price = float(report["order_price"])
         self.time = report["transaction_time"]
+        self.cumulative_filled_quantity = float(report["cumulative_filled_quantity"])
 
     def __repr__(self):
         return f"<BinanceOrder {self.event}>"
 
 
 class BinanceCache:  # pylint: disable=too-few-public-methods
-    ticker_values: Dict[str, float] = {}
-    _balances: Dict[str, float] = {}
-    _balances_mutex: threading.Lock = threading.Lock()
-    non_existent_tickers: Set[str] = set()
-    orders: Dict[str, BinanceOrder] = {}
+    def __init__(self):
+        self.ticker_values: Dict[str, float] = {}
+        self.ticker_values_ask: Dict[str, float] = {}
+        self.ticker_values_bid: Dict[str, float] = {}
+        self._balances: Dict[str, float] = {}
+        self._balances_mutex: ThreadSafeAsyncLock = ThreadSafeAsyncLock()
+        self.non_existent_tickers: Set[str] = set()
+        self.balances_changed_event = threading.Event()
+        self.orders: Dict[str, BinanceOrder] = {}
+
+    def attach_loop(self):
+        self._balances_mutex.attach_loop()
 
     @contextmanager
     def open_balances(self):
         with self._balances_mutex:
+            yield self._balances
+
+    @asynccontextmanager
+    async def open_balances_async(self):
+        async with self._balances_mutex:
             yield self._balances
 
 
@@ -78,6 +125,20 @@ class BinanceStreamManager:
         self.bw_api_manager.create_stream(
             ["arr"], ["!userData"], api_key=config.BINANCE_API_KEY, api_secret=config.BINANCE_API_SECRET_KEY
         )
+
+
+        if config.PRICE_TYPE == Config.PRICE_TYPE_ORDERBOOK:
+            supported_coin_list=config.SUPPORTED_COIN_LIST
+            bridge_coin=config.BRIDGE_SYMBOL
+            symbols = []
+            for symbol in supported_coin_list:
+                symbol=symbol.lower()+ bridge_coin.lower()
+                symbols.append(symbol)
+
+            self.bw_api_manager.create_stream(
+                ["bookTicker"], symbols
+            )
+            
         self.binance_client = binance_client
         self.pending_orders: Set[Tuple[str, int]] = set()
         self.pending_orders_mutex: threading.Lock = threading.Lock()
@@ -107,6 +168,7 @@ class BinanceStreamManager:
                 "order_type": order["type"],
                 "order_id": order["orderId"],
                 "cumulative_quote_asset_transacted_quantity": float(order["cummulativeQuoteQty"]),
+                "cumulative_filled_quantity": float(order["executedQty"]),
                 "current_order_status": order["status"],
                 "order_price": float(order["price"]),
                 "transaction_time": order["time"],
@@ -135,7 +197,7 @@ class BinanceStreamManager:
                         self.logger.debug("Connect for userdata arrived", False)
                         self._fetch_pending_orders()
                         self._invalidate_balances()
-            if stream_data is not False:
+            if stream_data is not False and "event_type" in stream_data:
                 self._process_stream_data(stream_data)
             if stream_data is False and stream_signal is False:
                 time.sleep(0.01)
@@ -160,6 +222,9 @@ class BinanceStreamManager:
         elif event_type == "24hrMiniTicker":
             for event in stream_data["data"]:
                 self.cache.ticker_values[event["symbol"]] = float(event["close_price"])
+        elif event_type == "bookTicker":
+                self.cache.ticker_values_ask[stream_data["symbol"]] = float(stream_data["best_ask_price"])
+                self.cache.ticker_values_bid[stream_data["symbol"]] = float(stream_data["best_bid_price"])
         else:
             self.logger.error(f"Unknown event type found: {event_type}\n{stream_data}")
 

@@ -1,8 +1,7 @@
 # binance-trade-bot
 
 ![github](https://img.shields.io/github/workflow/status/edeng23/binance-trade-bot/binance-trade-bot)
-![docker](https://img.shields.io/docker/pulls/edeng23/binance-trade-bot)
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/edeng23/binance-trade-bot)
+![docker](https://img.shields.io/docker/pulls/idkravitz/binance-trade-bot)
 
 > Automated cryptocurrency trading bot
 
@@ -33,12 +32,16 @@ The bot jumps between a configured set of coins on the condition that it does no
 
 ## Binance Setup
 
--   Create a [Binance account](https://www.binance.com/en/register?ref=13222128) (Includes my referral link, I'll be super grateful if you use it).
+-   Create a [Binance account](https://accounts.binance.com/en/register?ref=DDA1SQA) (Includes my referral link, I'll be super grateful if you use it).
 -   Enable Two-factor Authentication.
--   Create a new API key.
+-   Create a new API key and whitelist your IP for it.
 -   Get a cryptocurrency. If its symbol is not in the default list, add it.
 
 ## Tool Setup
+
+### Required Python version
+
+Currently Python 3.7 is the minimum required version.
 
 ### Install Python dependencies
 
@@ -56,13 +59,21 @@ Create a .cfg file named `user.cfg` based off `.user.cfg.example`, then add your
 -   **bridge** - Your bridge currency of choice. Notice that different bridges will allow different sets of supported coins. For example, there may be a Binance particular-coin/USDT pair but no particular-coin/BUSD pair.
 -   **tld** - 'com' or 'us', depending on your region. Default is 'com'.
 -   **hourToKeepScoutHistory** - Controls how many hours of scouting values are kept in the database. After the amount of time specified has passed, the information will be deleted.
--   **scout_sleep_time** - Controls how many seconds are waited between each scout.
--   **use_margin** - 'yes' to use scout_margin. 'no' to use scout_multiplier.
 -   **scout_multiplier** - Controls the value by which the difference between the current state of coin ratios and previous state of ratios is multiplied. For bigger values, the bot will wait for bigger margins to arrive before making a trade.
--   **scout_margin** - Minimum percentage coin gain per trade. 0.8 translates to a scout multiplier of 5 at 0.1% fee.
+-   **trade_fee** - Controls trade fee for calculating profitable jumps. By default it doesn't have value: gets values through the binance api calls. Otherwise use float values for the fee. [Binance fee table for reference](https://www.binance.com/en/fee/schedule)
 -   **strategy** - The trading strategy to use. See [`binance_trade_bot/strategies`](binance_trade_bot/strategies/README.md) for more information
+-   **enable_paper_trading** - (`True` or `False` default `False`) run bot with virtual wallet to check its performance without risking any money.
 -   **buy_timeout/sell_timeout** - Controls how many minutes to wait before cancelling a limit order (buy/sell) and returning to "scout" mode. 0 means that the order will never be cancelled prematurely.
 -   **scout_sleep_time** - Controls how many seconds bot should wait between analysis of current prices. Since the bot now operates on websockets this value should be set to something low (like 1), the reasons to set it above 1 are when you observe high CPU usage by bot or you got api errors about requests weight limit.
+-   **buy_order_type** - Controls the type of placed buy orders, types available: market, limit (default=limit)
+-   **sell_order_type** - Controls the type of placed sell orders, types available: market, limit (default=market)
+-   **buy_max_price_change/sell_max_price_change** - Controls how much price change in decimal percentage is accepted between calculation of ratios and trading.
+-   **price_type** - Controls the type of prices used by the bot, types available: orderbook, ticker (default=orderbook). Please note that using the orderbook prices increase the CPU usage.
+-   **ratio_calc** - Controls the calculation for ratios between coins. Options available: default, scout_margin. Keep in mind you need to decrease your scout_multiplier for the scout_margin. A scout_multiplier of 12 with the default calc would be a scout_multiplier of 2 with the scout_margin calc.
+-   **accept_losses** - Needs to be set to true for highly risky and gamling strategies. Otherwise the bot wont start.
+-   **auto_adjust_bnb_balance** - Controls the bot to auto buy BNB while there is no enough BNB balance in your account, to get the benifits of using BNB to pay the commisions. Default is false. Effective if you have enabled to [use BNB to pay for any fees on the Binance platform](https://www.binance.com/en/support/faq/115000583311-Using-BNB-to-Pay-for-Fees), reade more information [here](#paying-fees-with-bnb).
+-   **auto_adjust_bnb_balance_rate** - The multiplying power of buying quantity of BNB compares to evaluated comission of the coming order, effective only if auto_adjust_bnb_balance is true. Default value is 3.
+-   **allow_coin_merge** - Allow multiple_coins strategy to merge coins into one. It turned out that its more profitable if the strategy can merge the held coins into one. If you dont want this you may be safer for one falling coin but you also pay with potential gains. Default is true to ensure the behavior is like in the origin repo.
 
 #### Environment Variables
 
@@ -80,6 +91,11 @@ TLD: com
 STRATEGY: default
 BUY_TIMEOUT: 0
 SELL_TIMEOUT: 0
+BUY_ORDER_TYPE: limit
+SELL_ORDER_TYPE: market
+AUTO_ADJUST_BNB_BALANCE: false
+AUTO_ADJUST_BNB_BALANCE_RATE: 3
+ALLOW_COIN_MERGE: true
 ```
 
 ### Paying Fees with BNB
@@ -106,7 +122,7 @@ python -m binance_trade_bot
 
 ### Docker
 
-The official image is available [here](https://hub.docker.com/r/edeng23/binance-trade-bot) and will update on every new change.
+The official image is available [here](https://hub.docker.com/r/idkravitz/binance-trade-bot) and will update on every new change.
 
 ```shell
 docker-compose up
@@ -128,6 +144,33 @@ python backtest.py
 
 Feel free to modify that file to test and compare different settings and time periods
 
+## Database warmup
+
+You can warmup your database with coins wich you might want to add later to your supported coin list. 
+This should prevent uncontrolled jumps when you add a new coin to your supported coin list.
+
+After the execution you should wait one or two trades of the bot before adding any new coin to your list.
+
+By running the script without parameters, it will warm up the bots default database with all available coins for the bridge.
+
+```shell
+python3 database_warmup.py
+```
+
+If you want to specify a separate db file you can use the -d or --dbfile parameter.
+If not provided, the script will use the bots default db file.
+
+```shell
+python3 database_warmup.py -d data/warmup.db
+```
+
+You can also specify the coins you want to warmup with the -c or --coinlist parameter.
+If not provided the script will warmup all coins available for the bridge.
+
+```shell
+python3 database_warmup.py -c 'ADA BTC ETH LTC'
+```
+
 ## Developing
 
 To make sure your code is properly formatted before making a pull request,
@@ -147,7 +190,13 @@ Thanks to a group of talented developers, there is now a [Telegram bot for remot
 
 ## Support the Project
 
+Fist of all, support the originator of this bot and buy him a coffee. ☕
+
 <a href="https://www.buymeacoffee.com/edeng" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+If you like my adjustments and you want to support me I would appreciate to get a coffee too. 😜
+
+<a href="https://www.buymeacoffee.com/tntwist" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## Join the Chat
 

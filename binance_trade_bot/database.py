@@ -1,29 +1,34 @@
 import json
 import os
 import time
+from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
 from socketio import Client
 from socketio.exceptions import ConnectionError as SocketIOConnectionError
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from .config import Config
 from .logger import Logger
 from .models import *  # pylint: disable=wildcard-import
 
+LogScout = namedtuple("LogScout", ["pair", "target_ratio", "coin_price", "optional_coin_price"])
+
 
 class Database:
-    def __init__(self, logger: Logger, config: Config, uri="sqlite:///data/crypto_trading.db"):
+    def __init__(self, logger: Logger, config: Config, uri="sqlite:///data/crypto_trading.db", isTest=False):
         self.logger = logger
         self.config = config
         self.engine = create_engine(uri)
-        self.SessionMaker = sessionmaker(bind=self.engine)
+        self.session_factory = scoped_session(sessionmaker(bind=self.engine))
         self.socketio_client = Client()
+        self.isTest=isTest
 
     def socketio_connect(self):
+        if self.isTest:    return False
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True
         try:
@@ -40,7 +45,7 @@ class Database:
         """
         Creates a context with an open SQLAlchemy session.
         """
-        session: Session = scoped_session(self.SessionMaker)
+        session: Session = self.session_factory()
         yield session
         session.commit()
         session.close()
@@ -145,6 +150,24 @@ class Database:
             session.expunge_all()
             return pairs
 
+    def batch_log_scout(self, logs: List[LogScout]):
+        session: Session
+        with self.db_session() as session:
+            dt = datetime.now()
+            session.execute(
+                insert(ScoutHistory),
+                [
+                    {
+                        "pair_id": ls.pair.id,
+                        "target_ratio": ls.target_ratio,
+                        "current_coin_price": ls.coin_price,
+                        "other_coin_price": ls.optional_coin_price,
+                        "datetime": dt,
+                    }
+                    for ls in logs
+                ],
+            )
+
     def log_scout(
         self,
         pair: Pair,
@@ -168,49 +191,8 @@ class Database:
     def prune_value_history(self):
         session: Session
         with self.db_session() as session:
-            # Sets the first entry for each coin for each hour as 'hourly'
-            hourly_entries: List[CoinValue] = (
-                session.query(CoinValue).group_by(CoinValue.coin_id, func.strftime("%H", CoinValue.datetime)).all()
-            )
-            for entry in hourly_entries:
-                entry.interval = Interval.HOURLY
-
-            # Sets the first entry for each coin for each day as 'daily'
-            daily_entries: List[CoinValue] = (
-                session.query(CoinValue).group_by(CoinValue.coin_id, func.date(CoinValue.datetime)).all()
-            )
-            for entry in daily_entries:
-                entry.interval = Interval.DAILY
-
-            # Sets the first entry for each coin for each month as 'weekly'
-            # (Sunday is the start of the week)
-            weekly_entries: List[CoinValue] = (
-                session.query(CoinValue).group_by(CoinValue.coin_id, func.strftime("%Y-%W", CoinValue.datetime)).all()
-            )
-            for entry in weekly_entries:
-                entry.interval = Interval.WEEKLY
-
-            # The last 24 hours worth of minutely entries will be kept, so
-            # count(coins) * 1440 entries
-            time_diff = datetime.now() - timedelta(hours=24)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.MINUTELY, CoinValue.datetime < time_diff
-            ).delete()
-
-            # The last 28 days worth of hourly entries will be kept, so count(coins) * 672 entries
-            time_diff = datetime.now() - timedelta(days=28)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.HOURLY, CoinValue.datetime < time_diff
-            ).delete()
-
-            # The last years worth of daily entries will be kept, so count(coins) * 365 entries
-            time_diff = datetime.now() - timedelta(days=365)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
-            ).delete()
-
-            # All weekly entries will be kept forever
-
+            session.query(CoinValue).delete()
+            
     def create_database(self):
         Base.metadata.create_all(self.engine)
 
@@ -238,11 +220,11 @@ class Database:
                 self.logger.info(f".current_coin file found, loading current coin {coin}")
                 self.set_current_coin(coin)
             os.rename(".current_coin", ".current_coin.old")
-            self.logger.info(f".current_coin renamed to .current_coin.old - You can now delete this file")
+            self.logger.info(".current_coin renamed to .current_coin.old - You can now delete this file")
 
         if os.path.isfile(".current_coin_table"):
             with open(".current_coin_table") as f:
-                self.logger.info(f".current_coin_table file found, loading into database")
+                self.logger.info(".current_coin_table file found, loading into database")
                 table: dict = json.load(f)
                 session: Session
                 with self.db_session() as session:
@@ -256,6 +238,24 @@ class Database:
 
             os.rename(".current_coin_table", ".current_coin_table.old")
             self.logger.info(".current_coin_table renamed to .current_coin_table.old - " "You can now delete this file")
+
+    def batch_update_coin_values(self, cv_batch: List[CoinValue]):
+        session: Session
+        with self.db_session() as session:
+            session.execute(
+                insert(CoinValue),
+                [
+                    {
+                        "coin_id": cv.coin.symbol,
+                        "balance": cv.balance,
+                        "usd_price": cv.usd_price,
+                        "btc_price": cv.btc_price,
+                        "interval": cv.interval,
+                        "datetime": cv.datetime,
+                    }
+                    for cv in cv_batch
+                ],
+            )
 
 
 class TradeLog:

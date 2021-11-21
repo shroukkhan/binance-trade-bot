@@ -1,6 +1,7 @@
-# Config consts
 import configparser
 import os
+
+import binance.client
 
 from .models import Coin
 
@@ -9,20 +10,39 @@ USER_CFG_SECTION = "binance_user_config"
 
 
 class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+    ORDER_TYPE_MARKET = "market"
+    ORDER_TYPE_LIMIT = "limit"
+
+    PRICE_TYPE_ORDERBOOK = "orderbook"
+    PRICE_TYPE_TICKER = "ticker"
+    
+    RATIO_CALC_DEFAULT = "default"
+    RATIO_CALC_SCOUT_MARGIN = "scout_margin"
+
     def __init__(self):
         # Init config
         config = configparser.ConfigParser()
         config["DEFAULT"] = {
             "bridge": "USDT",
-            "use_margin": "no",
             "scout_multiplier": "5",
-            "scout_margin": "0.8",
             "scout_sleep_time": "5",
             "hourToKeepScoutHistory": "1",
             "tld": "com",
+            "trade_fee": "auto",
             "strategy": "default",
+            "enable_paper_trading": "false",
             "sell_timeout": "0",
             "buy_timeout": "0",
+            "sell_order_type": self.ORDER_TYPE_MARKET,
+            "buy_order_type": self.ORDER_TYPE_LIMIT,
+            "sell_max_price_change": "0.005",
+            "buy_max_price_change": "0.005",
+            "price_type": self.PRICE_TYPE_ORDERBOOK,
+            "ratio_calc": "default",
+            "accept_losses": "false",
+            "auto_adjust_bnb_balance": "false",
+            "auto_adjust_bnb_balance_rate": "3",
+            "allow_coin_merge": "true"
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -56,6 +76,9 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         supported_coin_list = [
             coin.strip() for coin in os.environ.get("SUPPORTED_COIN_LIST", "").split() if coin.strip()
         ]
+
+        self.TRADE_FEE = os.environ.get("TRADE_FEE") or config.get(USER_CFG_SECTION, "trade_fee")
+
         # Get supported coin list from supported_coin_list file
         if not supported_coin_list and os.path.exists("supported_coin_list"):
             with open("supported_coin_list") as rfh:
@@ -70,8 +93,83 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
 
+        enable_paper_trading_str = os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION, "enable_paper_trading")
+        self.ENABLE_PAPER_TRADING = enable_paper_trading_str == "true" or enable_paper_trading_str == "True"
+
         self.SELL_TIMEOUT = os.environ.get("SELL_TIMEOUT") or config.get(USER_CFG_SECTION, "sell_timeout")
         self.BUY_TIMEOUT = os.environ.get("BUY_TIMEOUT") or config.get(USER_CFG_SECTION, "buy_timeout")
 
-        self.USE_MARGIN = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
-        self.SCOUT_MARGIN = float(os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin"))
+        order_type_map = {
+            self.ORDER_TYPE_LIMIT: binance.client.Client.ORDER_TYPE_LIMIT,
+            self.ORDER_TYPE_MARKET: binance.client.Client.ORDER_TYPE_MARKET,
+        }
+
+        sell_order_type = os.environ.get("SELL_ORDER_TYPE") or config.get(
+            USER_CFG_SECTION, "sell_order_type", fallback=self.ORDER_TYPE_MARKET
+        )
+        if sell_order_type not in order_type_map:
+            raise Exception(
+                f"{self.ORDER_TYPE_LIMIT} or {self.ORDER_TYPE_MARKET} expected, got {sell_order_type}"
+                "for sell_order_type"
+            )
+        self.SELL_ORDER_TYPE = order_type_map[sell_order_type]
+
+        self.SELL_MAX_PRICE_CHANGE = os.environ.get("SELL_MAX_PRICE_CHANGE") or config.get(USER_CFG_SECTION, "sell_max_price_change")
+
+        buy_order_type = os.environ.get("BUY_ORDER_TYPE") or config.get(
+            USER_CFG_SECTION, "buy_order_type", fallback=self.ORDER_TYPE_LIMIT
+        )
+        if buy_order_type not in order_type_map:
+            raise Exception(
+                f"{self.ORDER_TYPE_LIMIT} or {self.ORDER_TYPE_MARKET} expected, got {buy_order_type}"
+                "for buy_order_type"
+            )
+        if buy_order_type == self.ORDER_TYPE_MARKET:
+            raise Exception(
+                "Market buys are reported to do extreme losses, they are disabled right now,"
+                "comment this line only if you know what you're doing"
+            )
+        self.BUY_ORDER_TYPE = order_type_map[buy_order_type]
+
+        self.BUY_MAX_PRICE_CHANGE = os.environ.get("BUY_MAX_PRICE_CHANGE") or config.get(USER_CFG_SECTION, "buy_max_price_change")
+
+        price_types = {
+            self.PRICE_TYPE_ORDERBOOK,
+            self.PRICE_TYPE_TICKER
+        }
+
+        price_type = os.environ.get("PRICE_TYPE") or config.get(
+            USER_CFG_SECTION, "price_type", fallback=self.PRICE_TYPE_ORDERBOOK
+        )
+        if price_type not in price_types:
+            raise Exception(f"{self.PRICE_TYPE_ORDERBOOK} or {self.PRICE_TYPE_TICKER} expected, got {price_type} for price_type")
+        self.PRICE_TYPE = price_type
+
+        ratio_calcs = {
+            self.RATIO_CALC_DEFAULT,
+            self.RATIO_CALC_SCOUT_MARGIN
+        }
+
+        ratio_calc = os.environ.get("RATIO_CALC") or config.get(
+            USER_CFG_SECTION, "ratio_calc", fallback=self.RATIO_CALC_DEFAULT
+        )
+        if ratio_calc not in ratio_calcs:
+            raise Exception(
+                f"{self.RATIO_CALC_DEFAULT} or {self.RATIO_CALC_SCOUT_MARGIN} expected, got {ratio_calc}"
+                "for ratio_calc"
+            )
+        self.RATIO_CALC = ratio_calc
+
+        accept_losses_str = os.environ.get("ACCEPT_LOSSES") or config.get(USER_CFG_SECTION, "accept_losses")
+        self.ACCEPT_LOSSES = accept_losses_str == 'true' or accept_losses_str == 'True'
+
+
+        auto_adjust_bnb_balance_str = os.environ.get("AUTO_ADJUST_BNB_BALANCE") or config.get(USER_CFG_SECTION, "auto_adjust_bnb_balance")
+        self.AUTO_ADJUST_BNB_BALANCE = str(auto_adjust_bnb_balance_str).lower() == "true"
+
+        self.AUTO_ADJUST_BNB_BALANCE_RATE = float(
+            os.environ.get("AUTO_ADJUST_BNB_BALANCE_RATE") or config.get(USER_CFG_SECTION, "auto_adjust_bnb_balance_rate")
+        )
+
+        allow_coin_merge = os.environ.get("ALLOW_COIN_MERGE") or config.get(USER_CFG_SECTION, "allow_coin_merge")
+        self.ALLOW_COIN_MERGE = str(allow_coin_merge).lower() == 'true'
