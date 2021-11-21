@@ -1,0 +1,1 @@
+C:\Users\skhan\python-practice\binance-trade-bot\Scripts\activate.bat
