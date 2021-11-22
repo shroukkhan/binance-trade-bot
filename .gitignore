@@ -5,10 +5,13 @@
 __pycache__
 nohup.out
 user.cfg
-.idea/
+#.idea/
 .vscode/
 .replit
 venv/
 crypto_trading.db
+*.db
+*.db-shm
+*.db-wal
 apprise.yml
 .DS_Store
