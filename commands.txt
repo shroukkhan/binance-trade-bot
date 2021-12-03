@@ -1,0 +1,5 @@
+Copy warmed up db:
+scp -r data/* skhan@192.168.0.99:/home/skhan/binance-trade-bot/data/
+
+
+
