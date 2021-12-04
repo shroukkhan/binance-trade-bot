@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: binance_trader
     working_dir: /app
+    restart: unless-stopped
     volumes:
       - ./user.cfg:/app/user.cfg
       - ./supported_coin_list:/app/supported_coin_list
@@ -23,6 +24,7 @@ services:
       dockerfile: Dockerfile
     container_name: binance_trader_api
     working_dir: /app
+    restart: unless-stopped
     volumes:
       - ./user.cfg:/app/user.cfg
       - ./data:/app/data
@@ -36,6 +38,7 @@ services:
   sqlitebrowser:
     image: ghcr.io/linuxserver/sqlitebrowser
     container_name: sqlitebrowser
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
