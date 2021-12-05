@@ -125,7 +125,7 @@ python backtest.py
 
 Feel free to modify that file to test and compare different settings and time periods
 
-# Database warmup
+## Database warmup
 
 You can warmup your database with coins wich you might want to add later to your supported coin list. 
 This should prevent uncontrolled jumps when you add a new coin to your supported coin list.
