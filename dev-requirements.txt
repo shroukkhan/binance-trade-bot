@@ -1,1 +1,5 @@
 pylint-sqlalchemy
+pylint-pytest
+pytest
+pytest-timeout
+pathlib

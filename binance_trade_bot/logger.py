@@ -29,6 +29,10 @@ class Logger:
         # notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
 
+    def close(self):
+        for handler in self.Logger.handlers[:]:
+            handler.close()
+
     def log(self, message, level="info", notification=True):
 
         if level == "info":
