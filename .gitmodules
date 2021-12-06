@@ -1,0 +1,3 @@
+[submodule "telegrambot"]
+	path = telegrambot
+	url = git@github.com:shroukkhan/BTB-manager-telegram.git
