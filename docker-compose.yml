@@ -14,7 +14,7 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./config:/app/config
-    command: python -m binance_trade_bot
+    command: ./start_bot.sh
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
@@ -35,6 +35,7 @@ services:
     depends_on:
       - crypto-trading
     environment:
+      - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
 
   sqlitebrowser:

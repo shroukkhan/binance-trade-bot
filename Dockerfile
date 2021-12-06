@@ -13,5 +13,6 @@ WORKDIR /app
 
 COPY --from=builder /install /usr/local
 COPY . .
+RUN chmod +x start_bot.sh
 
-CMD ["python", "-m", "binance_trade_bot"]
+CMD ["sh", "./start_bot.sh"]
