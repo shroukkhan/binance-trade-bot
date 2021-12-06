@@ -204,7 +204,7 @@ class AutoTrader(ABC):
         price_amounts: Dict[str, (float, float)] = {}
 
         scout_logs = []
-        for to_idx, ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
+        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
             if coin.idx == to_idx:
                 continue
             to_coin = CoinStub.get_by_idx(to_idx)
@@ -220,16 +220,6 @@ class AutoTrader(ABC):
 
             price_amounts[to_coin.symbol] = (optional_coin_buy_price, optional_coin_amount)
 
-            if enable_scout_log:
-                scout_logs.append(
-                    LogScout(
-                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),
-                        ratio,
-                        coin_sell_price,
-                        optional_coin_buy_price,
-                    )
-                )
-
             # Obtain (current coin)/(optional coin)
             coin_opt_coin_ratio = coin_sell_price / optional_coin_buy_price
 
@@ -239,14 +229,25 @@ class AutoTrader(ABC):
 
             if self.config.USE_MARGIN:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
-                    (1 - transaction_fee) * coin_opt_coin_ratio / ratio - 1 - self.config.SCOUT_MARGIN / 100
+                    (1 - transaction_fee) * coin_opt_coin_ratio / target_ratio - 1 - self.config.SCOUT_MARGIN / 100
                 )
             else:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
                     coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
-                ) - ratio
+                ) - target_ratio
 
-        if len(scout_logs) > 0:
+            if enable_scout_log:
+                scout_logs.append(
+                    LogScout(
+                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),
+                        ratio_dict[(coin.idx, to_coin.idx)],
+                        target_ratio,
+                        coin_sell_price,
+                        optional_coin_buy_price,
+                    )
+                )
+
+        if scout_logs:
             self.db.batch_log_scout(scout_logs)
 
         return ratio_dict, price_amounts

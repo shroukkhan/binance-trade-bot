@@ -18,7 +18,7 @@ from .config import Config
 from .logger import Logger
 from .models import *  # pylint: disable=wildcard-import
 
-LogScout = namedtuple("LogScout", ["pair_id", "target_ratio", "coin_price", "optional_coin_price"])
+LogScout = namedtuple("LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"])
 
 
 class Database:
@@ -155,6 +155,7 @@ class Database:
                 [
                     {
                         "pair_id": ls.pair_id,
+                        "ratio_diff": ls.ratio_diff,
                         "target_ratio": ls.target_ratio,
                         "current_coin_price": ls.coin_price,
                         "other_coin_price": ls.optional_coin_price,
@@ -238,6 +239,11 @@ class Database:
 
     def create_database(self):
         Base.metadata.create_all(self.engine)
+        try:
+            with self.db_session() as session:
+                session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
+        except:
+            pass
 
     def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
         return TradeLog(self, from_coin, to_coin, selling)

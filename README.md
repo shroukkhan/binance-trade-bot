@@ -127,7 +127,7 @@ Feel free to modify that file to test and compare different settings and time pe
 
 ## Database warmup
 
-You can warmup your database with coins wich you might want to add later to your supported coin list. 
+You can warmup your database with coins wich you might want to add later to your supported coin list.
 This should prevent uncontrolled jumps when you add a new coin to your supported coin list.
 
 After the execution you should wait one or two trades of the bot before adding any new coin to your list.
@@ -150,6 +150,28 @@ If not provided the script will warmup all coins available for the bridge.
 
 ```shell
 python3 database_warmup.py -c 'ADA BTC ETH LTC'
+```
+
+## Showing the current ratio changes
+
+This fork is along with scout history also saving the current changes in coin ratios.
+Those ratios are used by the bot to determine whether a jump to an another coin will
+yield more amount of the coin compared to a previous holding of that coin.
+If you are using the [BTB-manager-telegram](https://github.com/lorcalhost/BTB-manager-telegram)
+(see below), then shown ratios (`Current ratios` and `Next coin` buttons) are
+actually computed again, and mainly, not so accurately (fixed fee value).
+
+You can use the `show_ratio_changes.py` script to show the latest values of ratio changes:
+
+```shell
+python3 show_ratio_changes.py
+```
+
+You can add it to custom scripts (`config/custom_scripts.json`) in
+[BTB-manager-telegram](https://github.com/lorcalhost/BTB-manager-telegram):
+
+```json
+"Show ratio changes": "python3 ../binance-trade-bot/show_ratio_changes.py"
 ```
 
 ## Developing
