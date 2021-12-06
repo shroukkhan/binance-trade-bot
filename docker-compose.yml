@@ -17,7 +17,7 @@ services:
     command: python -m binance_trade_bot
     environment:
       - PYTHONUNBUFFERED=1
-
+      - TZ=Asia/Bangkok
   api:
     build:
       context: .
@@ -34,6 +34,8 @@ services:
     command: gunicorn binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5123
     depends_on:
       - crypto-trading
+    environment:
+      - TZ=Asia/Bangkok
 
   sqlitebrowser:
     image: ghcr.io/linuxserver/sqlitebrowser
@@ -42,9 +44,30 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/Berlin
+      - TZ=Asia/Bangkok
     volumes:
       - ./data/config:/config
       - ./data:/data
     ports:
       - 3000:3000
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: telegrambot/Dockerfile
+    container_name: binance_trader_telegram_bot
+    working_dir: /binance-trade-bot
+    restart: unless-stopped
+    volumes:
+      - ./user.cfg:/binance-trade-bot/user.cfg
+      - ./supported_coin_list:/binance-trade-bot/supported_coin_list
+      - ./config:/binance-trade-bot/config
+      - ./data:/binance-trade-bot/data
+      - ./telegrambot/btb_manager_telegram:/binance-trade-bot/btb_manager_telegram
+      - ./telegrambot/i18n:/binance-trade-bot/i18n
+      - ./telegrambot/custom_scripts:/binance-trade-bot/custom_scripts
+    command: python -m btb_manager_telegram -p ./
+    # python -m btb_manager_telegram -p /binance-trade-bot
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=Asia/Bangkok
