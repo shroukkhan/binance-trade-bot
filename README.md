@@ -1,3 +1,12 @@
+# NOTE TO SELF
+This is a copy of [Masa's master branch](https://github.com/MasaiasuOse/binance-trade-bot) . 
+```
+# git remote add masa git@github.com:MasaiasuOse/binance-trade-bot.git
+# git remote -v
+# git fetch masa
+# git merge masa/master
+```
+
 # binance-trade-bot
 
 ![github](https://img.shields.io/github/workflow/status/edeng23/binance-trade-bot/binance-trade-bot)
