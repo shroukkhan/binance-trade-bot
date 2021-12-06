@@ -46,6 +46,9 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         )
 
         self.USE_MARGIN = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
+        self.USE_MARGIN = {"yes": True, "no": False}.get(self.USE_MARGIN)
+        if self.USE_MARGIN is None:
+            raise ValueError("use_margin parameter must be either 'yes' or 'no'")
         self.SCOUT_MARGIN = os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin")
         self.SCOUT_MARGIN = float(self.SCOUT_MARGIN)
 

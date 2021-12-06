@@ -237,7 +237,7 @@ class AutoTrader(ABC):
             to_fee = self.manager.get_fee(to_coin.symbol, self.config.BRIDGE.symbol, False)
             transaction_fee = from_fee + to_fee - from_fee * to_fee
 
-            if self.config.USE_MARGIN == "yes":
+            if self.config.USE_MARGIN:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
                     (1 - transaction_fee) * coin_opt_coin_ratio / ratio - 1 - self.config.SCOUT_MARGIN / 100
                 )
