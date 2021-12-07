@@ -107,11 +107,11 @@ Please remember that this is a fork. To maintain the security of your API key it
 
 ### Build and run locally
 1. Clone this git to a location of your choice: 
-`git clone https://github.com/tntwist/binance-trade-bot tntwist-binance-trade-bot`
+`git clone https://github.com/masaiasuose/binance-trade-bot tntwist-binance-trade-bot`
 2. Change to the directory:
 `cd tntwist-binance-trade-bot`
 3. Build the container locally (this may take a few minutes depending on your hardware):
-`docker build . -t tntwist-binance-trade-bot`
+`docker build . -t masaiasuose-binance-trade-bot`
 4. Follow the steps in [Create user configuration](#create-user-configuration) to ensure you have created a `user.cfg` file in the directory created in step 2. If you have already done this, continue to step 5.
 5. Run docker-compose up
 `docker-compose up`
