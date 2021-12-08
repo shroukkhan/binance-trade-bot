@@ -21,7 +21,7 @@ def main():  # pylint:disable=too-many-statements
     config = Config()
     db = Database(logger, config)
     if config.ENABLE_PAPER_TRADING:
-        manager = BinanceAPIManager.create_manager_paper_trading(config, db, logger, {config.BRIDGE.symbol: 21_000.0})
+        manager = BinanceAPIManager.create_manager_paper_trading(config, db, logger, {config.BRIDGE.symbol: 1_000.0})
     else:
         manager = BinanceAPIManager.create_manager(config, db, logger)
 
