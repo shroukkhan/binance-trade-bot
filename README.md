@@ -124,15 +124,25 @@ To update, repeat steps 1 through 5. These commands above can also be added to a
 docker-compose up -d sqlitebrowser
 ```
 
-## Backtesting
+## Bot-testing
 
-You can test the bot on historic data to see how it performs.
+You can test the bot on historic data or with paper trading on live data to see how it performs. Papertrading is much faster but isn't as accurate as paper trading.
+
+### Backtesting
 
 ```shell
 python backtest.py
 ```
 
 Feel free to modify that file to test and compare different settings and time periods
+
+### Papertrading
+
+You can enable paper trading via the `user.cfg` and change the starting amount to use with the following line in `crypto_trading.py`:
+
+```
+manager = BinanceAPIManager.create_manager_paper_trading(config, db, logger, {config.BRIDGE.symbol: 1_000.0})
+```
 
 ## Database warmup
 
