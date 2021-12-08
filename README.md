@@ -118,7 +118,7 @@ Please remember that this is a fork. To maintain the security of your API key it
 
 To update, repeat steps 1 through 5. These commands above can also be added to a shell script to automate the process.
 
-## If you only want to start the SQLite browser
+### If you only want to start the SQLite browser
 
 ```shell
 docker-compose up -d sqlitebrowser
