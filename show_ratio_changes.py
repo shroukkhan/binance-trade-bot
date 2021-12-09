@@ -4,11 +4,11 @@ i.e. the current ratio changes.
 """
 
 import os
-from tabulate import tabulate
 import sqlite3
 from configparser import ConfigParser
 from datetime import datetime
 
+from tabulate import tabulate
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -27,11 +27,13 @@ with open(user_cfg_file_path) as cfg:
 con = sqlite3.connect(db_file_path)
 con.row_factory = sqlite3.Row
 cur = con.cursor()
-cur.execute("""
+cur.execute(
+    """
     SELECT pairs.from_coin_id, pairs.to_coin_id, scout_history.ratio_diff FROM scout_history
     LEFT JOIN pairs ON scout_history.pair_id = pairs.id WHERE datetime = (SELECT max(datetime) from scout_history)
     ORDER BY scout_history.ratio_diff ASC;
-""")
+"""
+)
 
 ratio_dict = cur.fetchall()
 
@@ -57,14 +59,7 @@ print(f"Last update time: {last_time}")
 
 if use_margin:
     scout_margin = float(config.get("binance_user_config", "scout_margin"))
-    header.append("% accumulation")
+    header.append("next jump")
     print(f"Scout margin: {scout_margin}% (jump on perc. accum. ~ {100 + scout_margin / 100}%)")
 
-print(tabulate(
-    ratio_dict_out,
-    headers=header,
-    tablefmt="fancy_grid",
-    numalign="left",
-    stralign="left",
-    floatfmt=".2f"
-))
+print(tabulate(ratio_dict_out, headers=header, tablefmt="github", numalign="center", stralign="center", floatfmt=".2f"))
