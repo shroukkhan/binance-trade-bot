@@ -1,69 +1,69 @@
 version: "3"
 
 services:
-  crypto-trading-1:
+  crypto-trading-2:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: binance_trader_1
+    container_name: binance_trader_2
     working_dir: /app
     restart: unless-stopped
     volumes:
-      - ./user1.cfg:/app/user.cfg
-      - ./supported_coin_list1:/app/supported_coin_list
-      - ./data1:/app/data
-      - ./logs1:/app/logs
-      - ./config1:/app/config
+      - ./user2.cfg:/app/user.cfg
+      - ./supported_coin_list2:/app/supported_coin_list
+      - ./data2:/app/data
+      - ./logs2:/app/logs
+      - ./config2:/app/config
     command: ./start_bot.sh
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
-  api-1:
+  api-2:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: binance_trader_api_1
+    container_name: binance_trader_api_2
     working_dir: /app
     restart: unless-stopped
     volumes:
-      - ./user1.cfg:/app/user.cfg
-      - ./data1:/app/data
-      - ./logs1:/app/logs
+      - ./user2.cfg:/app/user.cfg
+      - ./data2:/app/data
+      - ./logs2:/app/logs
     ports:
-      - 5124:5124
-    command: gunicorn binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5124
+      - 5125:5125
+    command: gunicorn binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5125
     depends_on:
-      - crypto-trading-1
+      - crypto-trading-2
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
 
-  sqlitebrowser-1:
+  sqlitebrowser-2:
     image: ghcr.io/linuxserver/sqlitebrowser
-    container_name: sqlitebrowser_1
+    container_name: sqlitebrowser_2
     restart: unless-stopped
     environment:
-      - PUID=1001
-      - PGID=1001
+      - PUID=1002
+      - PGID=1002
       - TZ=Asia/Bangkok
     volumes:
-      - ./data1/config:/config
-      - ./data1:/data
+      - ./data2/config:/config
+      - ./data2:/data
     ports:
-      - 3001:3001
+      - 3002:3002
 
-  telegram-bot-1:
+  telegram-bot-2:
     build:
       context: .
       dockerfile: telegrambot/Dockerfile
-    container_name: binance_trader_telegram_bot_1
+    container_name: binance_trader_telegram_bot_2
     working_dir: /binance-trade-bot
     restart: unless-stopped
     volumes:
-      - ./user1.cfg:/binance-trade-bot/user.cfg
-      - ./supported_coin_list1:/binance-trade-bot/supported_coin_list
-      - ./config1:/binance-trade-bot/config
-      - ./data1:/binance-trade-bot/data
+      - ./user2.cfg:/binance-trade-bot/user.cfg
+      - ./supported_coin_list2:/binance-trade-bot/supported_coin_list
+      - ./config2:/binance-trade-bot/config
+      - ./data2:/binance-trade-bot/data
       - ./telegrambot/btb_manager_telegram:/binance-trade-bot/btb_manager_telegram
       - ./telegrambot/i18n:/binance-trade-bot/i18n
       - ./telegrambot/custom_scripts:/binance-trade-bot/custom_scripts
