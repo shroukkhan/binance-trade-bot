@@ -1,7 +1,7 @@
 # binance-trade-bot
 
-![github](https://img.shields.io/github/workflow/status/edeng23/binance-trade-bot/binance-trade-bot)
-![docker](https://img.shields.io/docker/pulls/idkravitz/binance-trade-bot)
+![github](https://img.shields.io/github/workflow/status/masaiasuose/binance-trade-bot/binance-trade-bot)
+![docker]
 
 > Automated cryptocurrency trading bot
 
