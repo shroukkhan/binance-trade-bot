@@ -33,7 +33,7 @@ class Strategy(AutoTrader):
             self.logger.info("Skipping scouting... current coin {} not found".format(current_coin + self.config.BRIDGE))
             return
         if current_coin_amount * current_coin_price < self.manager.get_min_notional(
-            current_coin.symbol, self.config.BRIDGE.symbol
+                current_coin.symbol, self.config.BRIDGE.symbol
         ):
             self.logger.info(f"Current coin {current_coin.symbol} amount is below min notional, skip scouting")
             return
@@ -45,7 +45,7 @@ class Strategy(AutoTrader):
     def bridge_scout(self):
         current_coin = self.db.get_current_coin()
         if self.manager.get_currency_balance(current_coin.symbol) > self.manager.get_min_notional(
-            current_coin.symbol, self.config.BRIDGE.symbol
+                current_coin.symbol, self.config.BRIDGE.symbol
         ):
             # Only scout if we don't have enough of the current coin
             return

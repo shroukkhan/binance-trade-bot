@@ -21,6 +21,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "tld": "com",
             "strategy": "default",
             "enable_paper_trading": False,
+            "api_port": 5123
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -72,5 +73,11 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
         self.ENABLE_PAPER_TRADING = (
-            os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION, "enable_paper_trading")
-        ) == "True"
+                                            os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION,
+                                                                                                 "enable_paper_trading")
+                                    ) == "True"
+
+        # api port
+        self.API_PORT = int(
+            os.environ.get("API_PORT") or config.get(USER_CFG_SECTION, "API_PORT")
+        )

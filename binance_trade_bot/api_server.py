@@ -19,7 +19,6 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
 logger = Logger("api_server")
 config = Config()
 db = Database(logger, config)
@@ -98,9 +97,9 @@ def scouting_history():
     with db.db_session() as session:
         query = (
             session.query(ScoutHistory)
-            .join(ScoutHistory.pair)
-            .filter(Pair.from_coin_id == coin)
-            .order_by(ScoutHistory.datetime.asc())
+                .join(ScoutHistory.pair)
+                .filter(Pair.from_coin_id == coin)
+                .order_by(ScoutHistory.datetime.asc())
         )
 
         query = filter_period(query, ScoutHistory)
@@ -150,4 +149,4 @@ def handle_my_custom_event(json):
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=5123)
+    socketio.run(app, debug=True, port=config.API_PORT)
