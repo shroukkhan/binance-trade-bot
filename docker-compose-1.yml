@@ -50,7 +50,7 @@ services:
       - ./data1/config:/config
       - ./data1:/data
     ports:
-      - 3001:3001
+      - 3001:3000
 
   telegram-bot-1:
     build:

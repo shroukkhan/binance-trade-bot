@@ -50,7 +50,7 @@ services:
       - ./data2/config:/config
       - ./data2:/data
     ports:
-      - 3002:3002
+      - 3002:3000
 
   telegram-bot-2:
     build:
