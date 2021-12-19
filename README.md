@@ -110,23 +110,34 @@ If you are interested in running a Telegram bot, more information can be found a
 python -m binance_trade_bot
 ```
 
-### Docker
+## Docker
 
-The official image is available [here](https://hub.docker.com/r/idkravitz/binance-trade-bot) and will update on every new change.
+Please remember that this is a fork. To maintain the security of your API key it relies on local builds.
 
-```shell
-docker-compose up
-```
+### Build and run locally
+1. Clone this git to a location of your choice: 
+`git clone https://github.com/masaiasuose/binance-trade-bot tntwist-binance-trade-bot`
+2. Change to the directory:
+`cd tntwist-binance-trade-bot`
+3. Build the container locally (this may take a few minutes depending on your hardware):
+`docker build . -t masaiasuose-binance-trade-bot`
+4. Follow the steps in [Create user configuration](#create-user-configuration) to ensure you have created a `user.cfg` file in the directory created in step 2. If you have already done this, continue to step 5.
+5. Run docker-compose up
+`docker-compose up`
 
-If you only want to start the SQLite browser
+To update, repeat steps 1 through 5. These commands above can also be added to a shell script to automate the process.
+
+### If you only want to start the SQLite browser
 
 ```shell
 docker-compose up -d sqlitebrowser
 ```
 
-## Backtesting
+## Bot-testing
 
-You can test the bot on historic data to see how it performs.
+You can test the bot on historic data or with paper trading on live data to see how it performs. Papertrading is much faster but isn't as accurate as paper trading.
+
+### Backtesting
 
 ```shell
 python backtest.py
@@ -134,9 +145,17 @@ python backtest.py
 
 Feel free to modify that file to test and compare different settings and time periods
 
+### Papertrading
+
+You can enable paper trading via the `user.cfg` and change the starting amount to use with the following line in `crypto_trading.py`:
+
+```
+manager = BinanceAPIManager.create_manager_paper_trading(config, db, logger, {config.BRIDGE.symbol: 1_000.0})
+```
+
 ## Database warmup
 
-You can warmup your database with coins wich you might want to add later to your supported coin list. 
+You can warmup your database with coins wich you might want to add later to your supported coin list.
 This should prevent uncontrolled jumps when you add a new coin to your supported coin list.
 
 After the execution you should wait one or two trades of the bot before adding any new coin to your list.
@@ -159,6 +178,28 @@ If not provided the script will warmup all coins available for the bridge.
 
 ```shell
 python3 database_warmup.py -c 'ADA BTC ETH LTC'
+```
+
+## Showing the current ratio changes
+
+This fork is along with scout history also saving the current changes in coin ratios.
+Those ratios are used by the bot to determine whether a jump to an another coin will
+yield more amount of the coin compared to a previous holding of that coin.
+If you are using the [BTB-manager-telegram](https://github.com/lorcalhost/BTB-manager-telegram)
+(see below), then shown ratios (`Current ratios` and `Next coin` buttons) are
+actually computed again, and mainly, not so accurately (fixed fee value).
+
+You can use the `show_ratio_changes.py` script to show the latest values of ratio changes:
+
+```shell
+python3 show_ratio_changes.py
+```
+
+You can add it to custom scripts (`config/custom_scripts.json`) in
+[BTB-manager-telegram](https://github.com/lorcalhost/BTB-manager-telegram):
+
+```json
+"Show ratio changes": "python3 ../binance-trade-bot/show_ratio_changes.py"
 ```
 
 ## Developing
