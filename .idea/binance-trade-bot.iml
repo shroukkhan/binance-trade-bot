@@ -9,6 +9,9 @@
       <excludeFolder url="file://$MODULE_DIR$/data1" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/logs1" />
+      <excludeFolder url="file://$MODULE_DIR$/config2" />
+      <excludeFolder url="file://$MODULE_DIR$/data2" />
+      <excludeFolder url="file://$MODULE_DIR$/logs2" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
