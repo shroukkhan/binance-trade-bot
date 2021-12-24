@@ -61,6 +61,7 @@ class Strategy(AutoTrader):
             current_coin_symbol = self.config.CURRENT_COIN_SYMBOL
             if not current_coin_symbol:
                 current_coin_symbol = random.choice(self.config.SUPPORTED_COIN_LIST)
+                self.logger.info(f"Picked a <RANDOM> initial coin: {current_coin_symbol}")
 
             self.logger.info(f"Setting initial coin to {current_coin_symbol}")
 
@@ -68,10 +69,10 @@ class Strategy(AutoTrader):
                 sys.exit("***\nERROR!\nSince there is no backup file, a proper coin name must be provided at init\n***")
             self.db.set_current_coin(current_coin_symbol)
 
-        current_amount = self.manager.get_currency_balance(self.db.get_current_coin())
+        current_coin = self.db.get_current_coin()
+        current_amount = self.manager.get_currency_balance(current_coin.symbol)
         # if we don't have a configuration, we selected a coin at random... Buy it so we can start trading.
-        if self.config.CURRENT_COIN_SYMBOL == "" or current_amount == 0.0:
-            current_coin = self.db.get_current_coin()
+        if current_amount == 0.0:  # current coin symbol is empty, also current amount is 0.0
             self.logger.info(f"Purchasing {current_coin} to begin trading")
             self.manager.buy_alt(
                 current_coin.symbol,
@@ -79,3 +80,5 @@ class Strategy(AutoTrader):
                 self.manager.get_ticker_price(current_coin.symbol + self.config.BRIDGE.symbol),
             )
             self.logger.info("Ready to start trading")
+        else:
+            self.logger.info(f"We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
