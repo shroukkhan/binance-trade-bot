@@ -13,7 +13,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         config = configparser.ConfigParser()
         config["DEFAULT"] = {
             "bridge": "USDT",
-            "use_margin": "no",
+            "use_margin": "true",
             "scout_multiplier": "5",
             "scout_margin": "0.8",
             "scout_sleep_time": "1",
@@ -45,10 +45,10 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             os.environ.get("SCOUT_SLEEP_TIME") or config.get(USER_CFG_SECTION, "scout_sleep_time")
         )
 
-        self.USE_MARGIN = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
-        self.USE_MARGIN = {"yes": True, "no": False}.get(self.USE_MARGIN)
+        use_margin = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
+        self.USE_MARGIN = {"true": True, "false": False}.get(str(use_margin).lower())
         if self.USE_MARGIN is None:
-            raise ValueError("use_margin parameter must be either 'yes' or 'no'")
+            raise ValueError("use_margin parameter must be either 'true' or 'false'")
         self.SCOUT_MARGIN = os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin")
         self.SCOUT_MARGIN = float(self.SCOUT_MARGIN)
 
@@ -74,6 +74,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(USER_CFG_SECTION, "current_coin")
 
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
-        self.ENABLE_PAPER_TRADING = (
+        enable_paper_trading = (
             os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION, "enable_paper_trading")
-        ) == "True"
+        ) 
+        self.ENABLE_PAPER_TRADING = str(enable_paper_trading).lower() == "true"
