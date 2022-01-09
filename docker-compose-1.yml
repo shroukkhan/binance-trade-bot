@@ -38,19 +38,19 @@ services:
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
 
-  sqlitebrowser-1:
-    image: ghcr.io/linuxserver/sqlitebrowser
-    container_name: sqlitebrowser_1
-    restart: unless-stopped
-    environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Bangkok
-    volumes:
-      - ./data1/config:/config
-      - ./data1:/data
-    ports:
-      - 3001:3000
+#  sqlitebrowser-1:
+#    image: ghcr.io/linuxserver/sqlitebrowser
+#    container_name: sqlitebrowser_1
+#    restart: unless-stopped
+#    environment:
+#      - PUID=1001
+#      - PGID=1001
+#      - TZ=Asia/Bangkok
+#    volumes:
+#      - ./data1/config:/config
+#      - ./data1:/data
+#    ports:
+#      - 3001:3000
 
   telegram-bot-1:
     build:
