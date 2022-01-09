@@ -18,25 +18,25 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
-  api-2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: binance_trader_api_2
-    working_dir: /app
-    restart: unless-stopped
-    volumes:
-      - ./user2.cfg:/app/user.cfg
-      - ./data2:/app/data
-      - ./logs2:/app/logs
-    ports:
-      - 5125:5125
-    command: gunicorn binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5125
-    depends_on:
-      - crypto-trading-2
-    environment:
-      - PYTHONUNBUFFERED=1
-      - TZ=Asia/Bangkok
+#  api-2:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: binance_trader_api_2
+#    working_dir: /app
+#    restart: unless-stopped
+#    volumes:
+#      - ./user2.cfg:/app/user.cfg
+#      - ./data2:/app/data
+#      - ./logs2:/app/logs
+#    ports:
+#      - 5125:5125
+#    command: gunicorn binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5125
+#    depends_on:
+#      - crypto-trading-2
+#    environment:
+#      - PYTHONUNBUFFERED=1
+#      - TZ=Asia/Bangkok
 
 #  sqlitebrowser-2:
 #    image: ghcr.io/linuxserver/sqlitebrowser
