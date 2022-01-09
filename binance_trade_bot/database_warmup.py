@@ -147,3 +147,6 @@ def get_all_bridge_coins(client: Client, config: Config):
                 :
             all_bridge_coins.append(symbol.replace(config.BRIDGE_SYMBOL, ""))
     return all_bridge_coins
+
+    def scout(self):
+      '''no'''
