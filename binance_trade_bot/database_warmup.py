@@ -89,6 +89,8 @@ class WarmUpTrader(AutoTrader):
                     continue
 
                 pair.ratio = from_coin_price / to_coin_price
+    def scout(self):
+        '''Do nothing'''
 
 def warmup_database(coin_list: List[str] = None, db_path = "data/crypto_trading.db", config: Config = None):
     logger = Logger()
@@ -141,6 +143,3 @@ def get_all_bridge_coins(client: Client, config: Config):
         :
             all_bridge_coins.append(symbol.replace(config.BRIDGE_SYMBOL, ""))
     return all_bridge_coins
-
-    def scout(self):
-      '''no'''
