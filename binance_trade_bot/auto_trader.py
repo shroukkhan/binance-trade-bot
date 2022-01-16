@@ -252,23 +252,12 @@ class AutoTrader(ABC):
 
         return ratio_dict, price_amounts
 
-    def _jump_to_best_coin(
-        self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
-    ):
-        if self.config.USE_MARGIN:
-            self._jump_to_best_coin_scout_margin(coin, coin_sell_price, quote_amount, coin_amount)
-        else:
-            self._jump_to_best_coin_scout_multiplier(coin, coin_sell_price, quote_amount, coin_amount)
-
     @postpone_heavy_calls
-    def _jump_to_best_coin_scout_multiplier(
+    def _jump_to_best_coin(
         self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
     ):  # pylint: disable=too-many-locals
         """
-        Given a coin, search for a coin to jump to.
-        This is the original implementation from idkravitz which prevents fast
-        subsequent jumps between the same coins (squashed jumps).
-        It might happen when scout multiplier formula is used.
+        Given a coin, search for a coin to jump to
         """
         can_walk_deeper = True
         jump_chain = [coin.symbol]
@@ -334,37 +323,6 @@ class AutoTrader(ABC):
             else:
                 self.update_trade_threshold(coin, None, coin_sell_price, 0, quote_amount)
                 self.logger.info(f"Eliminated jump loop from {coin.symbol} to {coin.symbol}")
-
-    @postpone_heavy_calls
-    def _jump_to_best_coin_scout_margin(
-        self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
-    ):  # pylint: disable=too-many-locals
-        """
-        Given a coin, search for a coin to jump to.
-        This implementation is almost similar to the original version from edeng23.
-        """
-        ratio_dict, prices = self._get_ratios(
-            coin, coin_sell_price, quote_amount, enable_scout_log=True
-        )
-        ratio_dict = {k: v for k, v in ratio_dict.items() if v > 0}
-
-        if ratio_dict:
-            best_pair = max(ratio_dict, key=ratio_dict.get)
-            best_coin = CoinStub.get_by_idx(best_pair[1])
-            bridge_balance = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
-            best_coin_buy_price, _ = prices[best_coin.symbol]
-            self.logger.info(f"Will be jumping from {coin.symbol} to {best_coin.symbol}")
-            result = self.transaction_through_bridge(coin, best_coin, coin_sell_price, best_coin_buy_price)
-            expected_sold_quantity = self.manager.sell_quantity(coin.symbol, self.config.BRIDGE.symbol, coin_amount)
-            expected_bridge = expected_sold_quantity * coin_sell_price * 0.999 + bridge_balance
-            expected_bought_quantity_no_fees = self.manager.buy_quantity(
-                best_coin.symbol, self.config.BRIDGE.symbol, expected_bridge, best_coin_buy_price
-            )
-            self.logger.info(
-                f"Expected: {expected_bought_quantity_no_fees:0.08f}, "
-                f"Actual: {result.cumulative_filled_quantity:0.08f}, "
-                f"Slippage: {expected_bought_quantity_no_fees/result.cumulative_filled_quantity - 1:0.06%}"
-            )
 
     @postpone_heavy_calls
     def bridge_scout(self):
