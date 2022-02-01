@@ -17,4 +17,5 @@ crypto_trading.db
 *.db-wal
 apprise.yml
 .DS_Store
+*.pkl
 
