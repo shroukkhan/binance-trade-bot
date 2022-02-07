@@ -4,7 +4,15 @@ from binance_trade_bot import backtest
 
 if __name__ == "__main__":
     history = []
-    for manager in backtest(datetime(2021, 1, 1), datetime.now()):
+    for manager in backtest(start_date=datetime(year=2021,
+                                                month=12,
+                                                day=29,
+                                                hour=6,
+                                                minute=51),
+                            end_date=datetime.now(),
+                            start_balances={'USDT': 150},
+                            starting_coin='SOL',
+                            ):
         btc_value = manager.collate_coins("BTC")
         bridge_value = manager.collate_coins(manager.config.BRIDGE.symbol)
         history.append((btc_value, bridge_value))

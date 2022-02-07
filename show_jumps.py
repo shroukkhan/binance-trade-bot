@@ -4,32 +4,56 @@ from datetime import datetime
 from prettytable import *
 
 db_files = {
-    'Btc based': './data/crypto_trading.db',
-    'Shit based': './data/crypto_trading.db'
+   'Btc based': './data/crypto_trading.db',
+    'Shit based': './data1/crypto_trading.db'
+}
+
+coin_lists = {
+    'Btc based': './supported_coin_list',
+    'Shit based': './supported_coin_list1'
 }
 
 for key in db_files:
     title = key
+    coins = set(line.strip() for line in open(coin_lists[key]))
+
     DB_FILE = db_files[key]  # './data/crypto_trading.db'
     cursor = sqlite3.connect(DB_FILE)
 
     db = cursor.cursor()
 
-    db.execute('SELECT datetime FROM trade_history where selling=0 and state=\'COMPLETE\' order by id asc limit 1')
-    bot_start_date = db.fetchall()[0][0]
+    db.execute('SELECT alt_coin_id, datetime FROM trade_history where selling=0 and state=\'COMPLETE\' order by id asc')
+    result = db.fetchall()
+    for r in result:
+        if r[0] in coins:
+            bot_start_date = r[1]
+            break
 
     db.execute('SELECT datetime FROM scout_history order by id desc limit 1')
     bot_end_date = db.fetchall()[0][0]
 
-    db.execute('SELECT alt_coin_id FROM trade_history where id=1 and state=\'COMPLETE\' order by id asc limit 1')
-    initialCoinID = db.fetchall()[0][0]
+    db.execute('SELECT alt_coin_id FROM trade_history where state=\'COMPLETE\' order by id asc')
+    result = db.fetchall()
+    for r in result:
+        if r[0] in coins:
+            initialCoinID = r[0]
+            break
 
-    db.execute('select alt_trade_amount from trade_history where id=1 and state=\'COMPLETE\' order by id asc limit 1')
-    initialCoinValue = db.fetchall()[0][0]
+    db.execute('select alt_coin_id, alt_trade_amount from trade_history where state=\'COMPLETE\' order by id asc')
+    result = db.fetchall()
+    for r in result:
+        if r[0] in coins:
+            initialCoinValue = r[1]
+            break
 
     db.execute(
-        'select crypto_trade_amount from trade_history where id=1 and state=\'COMPLETE\' order by id asc limit 1')
-    initialCoinFiatValue = db.fetchall()[0][0]
+        'select alt_coin_id, crypto_trade_amount from trade_history where state=\'COMPLETE\' order by id asc')
+    result = db.fetchall()
+    for r in result:
+        if r[0] in coins:
+            initialCoinFiatValue = r[1]
+            break
+    #initialCoinFiatValue = db.fetchall()[0][0]
 
     db.execute('select alt_coin_id from trade_history where selling=0 and state=\'COMPLETE\' order by id desc limit 1')
     lastCoinID = db.fetchall()[0][0]
