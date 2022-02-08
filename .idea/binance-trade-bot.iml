@@ -12,6 +12,7 @@
       <excludeFolder url="file://$MODULE_DIR$/config2" />
       <excludeFolder url="file://$MODULE_DIR$/data2" />
       <excludeFolder url="file://$MODULE_DIR$/logs2" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (binance-trade-bot)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

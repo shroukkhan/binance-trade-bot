@@ -44,5 +44,17 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="backtest_cache" uuid="814bb7c6-2bc8-46fe-82b3-9b8778468a9d">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\AgodaGit\binance-trade-bot\data\backtest_cache.db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

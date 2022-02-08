@@ -18,4 +18,5 @@ crypto_trading.db
 apprise.yml
 .DS_Store
 *.pkl
+data_download.sh
 
