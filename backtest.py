@@ -11,7 +11,7 @@ if __name__ == "__main__":
                                                 minute=51),
                             end_date=datetime.now(),
                             start_balances={'USDT': 150},
-                            starting_coin='SOL',
+                            starting_coin='LUNA',
                             ):
         btc_value = manager.collate_coins("BTC")
         bridge_value = manager.collate_coins(manager.config.BRIDGE.symbol)
