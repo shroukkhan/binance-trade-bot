@@ -1,2 +1,5 @@
+backtest_current_date = None
+
 def initialize_globals():
-    global backtest_current_date
+    ''''''
+    #backtest_current_date = None
