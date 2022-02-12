@@ -11,22 +11,23 @@ from .binance_api_manager import BinanceAPIManager, BinanceOrderBalanceManager
 from .binance_stream_manager import BinanceCache, BinanceOrder
 from .config import Config
 from .database import Database
-from .logger import Logger
+from .logger import Logger, LogLevel
 from .models import Pair, ScoutHistory
+from .postpone import heavy_call
 from .strategies import get_strategy
 
 
 class MockBinanceManager(BinanceAPIManager):
     def __init__(
-        self,
-        client: Client,
-        sqlite_cache: SqliteDict,
-        binance_cache: BinanceCache,
-        config: Config,
-        db: Database,
-        logger: Logger,
-        start_date: datetime = None,
-        start_balances: Dict[str, float] = None,
+            self,
+            client: Client,
+            sqlite_cache: SqliteDict,
+            binance_cache: BinanceCache,
+            config: Config,
+            db: Database,
+            logger: Logger,
+            start_date: datetime = None,
+            start_balances: Dict[str, float] = None,
     ):  # pylint:disable=too-many-arguments
         super().__init__(
             client, binance_cache, config, db, logger, BinanceOrderBalanceManager(logger, client, binance_cache)
@@ -110,6 +111,7 @@ class MockBinanceManager(BinanceAPIManager):
         origin_symbol = origin_coin
         target_symbol = target_coin
 
+        origin_balance = self.get_currency_balance(origin_symbol)
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = self.get_ticker_price(origin_symbol + target_symbol)
         assert abs(buy_price - from_coin_price) < 1e-15 or buy_price == 0.0
@@ -124,7 +126,7 @@ class MockBinanceManager(BinanceAPIManager):
             f"{self.balances[target_symbol]}"
         )
 
-        return BinanceOrder(
+        order = BinanceOrder(
             defaultdict(
                 lambda: None,
                 price=from_coin_price,
@@ -133,11 +135,22 @@ class MockBinanceManager(BinanceAPIManager):
             )
         )
 
+        @heavy_call
+        def write_trade_log():
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
+            trade_log.set_ordered(origin_balance, target_balance, order_quantity)
+            trade_log.set_complete(order.cumulative_quote_qty)
+
+        write_trade_log()
+
+        return order
+
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
         origin_symbol = origin_coin
         target_symbol = target_coin
 
         origin_balance = self.get_currency_balance(origin_symbol)
+        target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = self.get_ticker_price(origin_symbol + target_symbol)
         assert abs(sell_price - from_coin_price) < 1e-15
 
@@ -150,7 +163,8 @@ class MockBinanceManager(BinanceAPIManager):
             f"Sold {origin_symbol}, balance now: {self.balances[origin_symbol]} - bridge: "
             f"{self.balances[target_symbol]}"
         )
-        return BinanceOrder(
+
+        order = BinanceOrder(
             defaultdict(
                 lambda: None,
                 price=from_coin_price,
@@ -158,6 +172,16 @@ class MockBinanceManager(BinanceAPIManager):
                 executedQty=order_quantity,
             )
         )
+        @heavy_call
+        def write_trade_log():
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
+            trade_log.set_ordered(origin_balance, target_balance, order_quantity)
+            trade_log.set_complete(order.cumulative_quote_qty)
+
+        write_trade_log()
+
+        return order
+
 
     def collate_coins(self, target_symbol: str):
         total = 0
@@ -185,8 +209,8 @@ class MockBinanceManager(BinanceAPIManager):
 
 
 class MockDatabase(Database):
-    def __init__(self, logger: Logger, config: Config):
-        super().__init__(logger, config, "sqlite:///")
+    def __init__(self, logger: Logger, config: Config, uri: str):
+        super().__init__(logger, config, uri)
 
     def log_scout(self, pair: Pair, target_ratio: float, current_coin_price: float, other_coin_price: float):
         pass
@@ -196,13 +220,14 @@ class MockDatabase(Database):
 
 
 def backtest(
-    start_date: datetime = None,
-    end_date: datetime = None,
-    interval=1,
-    yield_interval=100,
-    start_balances: Dict[str, float] = None,
-    starting_coin: str = None,
-    config: Config = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        interval=1,
+        yield_interval=100,
+        start_balances: Dict[str, float] = None,
+        starting_coin: str = None,
+        config: Config = None,
+        backtest_db_url: str = None
 ):
     """
 
@@ -218,11 +243,13 @@ def backtest(
     """
     sqlite_cache = SqliteDict("data/backtest_cache.db")
     config = config or Config()
-    logger = Logger("backtesting", enable_notifications=False)
+    logger = Logger("backtesting", enable_notifications=False,
+                    level=LogLevel.error)
 
     end_date = end_date or datetime.today()
 
-    db = MockDatabase(logger, config)
+    # Database(logger=logger, config=config, uri=backtest_db_url)  #
+    db = Database(logger=logger, config=config, uri=backtest_db_url) #MockDatabase(logger, config, backtest_db_url)
     db.create_database()
     db.set_coins(config.SUPPORTED_COIN_LIST)
     manager = MockBinanceManager(

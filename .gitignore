@@ -19,4 +19,4 @@ apprise.yml
 .DS_Store
 *.pkl
 data_download.sh
-
+backtest_results/*
