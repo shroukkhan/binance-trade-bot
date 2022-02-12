@@ -134,12 +134,12 @@ if __name__ == "__main__":
                           day=1,
                           hour=0,
                           minute=0)
-    end_date = datetime.now()
-    # end_date = datetime(year=2022,
-    #                     month=1,
-    #                     day=1,
-    #                     hour=6,
-    #                     minute=51)
+    # end_date = datetime.now()
+    end_date = datetime(year=2021,
+                        month=7,
+                        day=1,
+                        hour=8,
+                        minute=0)
 
     c = config.Config()
     c.SUPPORTED_COIN_LIST = [
@@ -232,7 +232,7 @@ if __name__ == "__main__":
             'value': bridge_value, 'diff': bridge_diff
         })
 
-        total_iteration_so_far = (manager.datetime - start_date).total_seconds() / 60
+        total_iteration_so_far = max(1, (manager.datetime - start_date).total_seconds() / 60)
         iteration_left = (start_date - manager.datetime).total_seconds() / 60
         now = datetime.now()
         average_per_iteration = ((now - iteration_start_at).total_seconds() * 1000) / total_iteration_so_far

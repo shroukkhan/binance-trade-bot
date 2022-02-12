@@ -92,5 +92,29 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="backtest-20220212-191349" uuid="be3381d6-ac5b-45d3-9fcd-d8e1e80788d5">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\AgodaGit\binance-trade-bot\backtest_results\backtest-20220212-191349.db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
+        </library>
+      </libraries>
+    </data-source>
+    <data-source source="LOCAL" name="backtest-20220212-231228" uuid="9e614b43-21ad-47e9-b6cb-23b03d0db19d">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\AgodaGit\binance-trade-bot\backtest_results\backtest-20220212-231228.db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

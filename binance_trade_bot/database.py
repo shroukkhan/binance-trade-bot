@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from binance_trade_bot.postpone import heavy_call
 from binance_trade_bot.ratios import CoinStub, RatiosManager
-
 from .config import Config
 from .logger import Logger
 from .models import *  # pylint: disable=wildcard-import
@@ -186,9 +185,9 @@ class Database:
         def _update_query(datetime_query, interval):
             return (
                 update(CoinValue)
-                .where(CoinValue.id.in_(datetime_query))
-                .values(interval=interval)
-                .execution_options(synchronize_session="fetch")
+                    .where(CoinValue.id.in_(datetime_query))
+                    .values(interval=interval)
+                    .execution_options(synchronize_session="fetch")
             )
 
         # Sets the first entry for each coin for each hour as 'hourly'
@@ -245,8 +244,8 @@ class Database:
         except:
             pass
 
-    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
-        return TradeLog(self, from_coin, to_coin, selling)
+    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool, trade_date: datetime = None):
+        return TradeLog(self, from_coin, to_coin, selling, trade_date)
 
     def send_update(self, model):
         if not self.socketio_connect():
@@ -330,13 +329,15 @@ class Database:
 
 
 class TradeLog:
-    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool):
+    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool, trade_date: datetime = None):
         self.db = db
         session: Session
         with self.db.db_session() as session:
             # from_coin = session.merge(from_coin)
             # to_coin = session.merge(to_coin)
             self.trade = Trade(from_coin, to_coin, selling)
+            if trade_date is not None:
+                self.trade.datetime = trade_date
             session.add(self.trade)
             # Flush so that SQLAlchemy fills in the id column
             session.flush()

@@ -137,7 +137,7 @@ class MockBinanceManager(BinanceAPIManager):
 
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, False, self.datetime)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -172,16 +172,16 @@ class MockBinanceManager(BinanceAPIManager):
                 executedQty=order_quantity,
             )
         )
+
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, True, self.datetime)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
         write_trade_log()
 
         return order
-
 
     def collate_coins(self, target_symbol: str):
         total = 0
@@ -249,7 +249,7 @@ def backtest(
     end_date = end_date or datetime.today()
 
     # Database(logger=logger, config=config, uri=backtest_db_url)  #
-    db = Database(logger=logger, config=config, uri=backtest_db_url) #MockDatabase(logger, config, backtest_db_url)
+    db = Database(logger=logger, config=config, uri=backtest_db_url)  # MockDatabase(logger, config, backtest_db_url)
     db.create_database()
     db.set_coins(config.SUPPORTED_COIN_LIST)
     manager = MockBinanceManager(
