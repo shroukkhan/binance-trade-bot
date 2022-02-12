@@ -253,7 +253,7 @@ class DepthCacheManager:
             try:
                 res = await self.client.get_order_book(symbol=self.symbol, limit=self.limit)
             except BinanceAPIException as e:
-                self.logger.error(f"Error while fetching snapshot of order book: {e}")
+                self.logger.error(f"Error while fetching snapshot of order book: {e} , symbol: {self.symbol}")
                 await asyncio.sleep(0.5)
             else:
                 break

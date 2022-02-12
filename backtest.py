@@ -6,6 +6,7 @@ from prettytable import *
 
 from binance_trade_bot import backtest
 from binance_trade_bot import config
+from binance_trade_bot import backtest_globals
 
 def print_progress(current: float, total: float, avg: float):
     progress = round((current / total) * 100, 2)
@@ -129,17 +130,17 @@ if __name__ == "__main__":
     # exit(1)
     history = []
     start_date = datetime(year=2021,
-                          month=7,
+                          month=2,
                           day=1,
                           hour=0,
                           minute=0)
 
-    # end_date = datetime.now()
-    end_date = datetime(year=2021,
-                        month=7,
-                        day=1,
-                        hour=8,
-                        minute=0)
+    end_date = datetime.now()
+    # end_date = datetime(year=2021,
+    #                     month=7,
+    #                     day=1,
+    #                     hour=8,
+    #                     minute=0)
 
     c = config.Config()
     c.SUPPORTED_COIN_LIST = [

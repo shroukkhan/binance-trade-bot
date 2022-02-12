@@ -245,7 +245,7 @@ def backtest(
     sqlite_cache = SqliteDict("data/backtest_cache.db")
     config = config or Config()
     logger = Logger("backtesting", enable_notifications=False,
-                    level=LogLevel.error)
+                    level=LogLevel.info)
 
     end_date = end_date or datetime.today()
 
@@ -285,10 +285,10 @@ def backtest(
     n = 1
 
     try:
-
         while manager.datetime < end_date:
             try:
                 trader.scout()
+                print(".", end='')
             except Exception:  # pylint: disable=broad-except
                 logger.warning(format_exc())
             manager.increment(interval)
