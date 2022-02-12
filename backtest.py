@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from prettytable import *
 
@@ -8,8 +8,11 @@ from binance_trade_bot import backtest
 from binance_trade_bot import config
 
 
-def get_progress(current: float, total: float) -> float:
-    return round((current / total) * 100, 2)
+def print_progress(current: float, total: float, avg: float):
+    progress = round((current / total) * 100, 2)
+    ms_left = (total - current) * avg
+    will_finish_at = datetime.now() + timedelta(milliseconds=ms_left)
+    print(f'progress: {progress}% of {total} iterations, ETA:{will_finish_at} (avg_ms: {avg}, ms_left: {ms_left})')
 
 
 def show_jumps(filename: str):
@@ -127,7 +130,7 @@ if __name__ == "__main__":
     # exit(1)
     history = []
     start_date = datetime(year=2021,
-                          month=1,
+                          month=7,
                           day=1,
                           hour=0,
                           minute=0)
@@ -188,6 +191,8 @@ if __name__ == "__main__":
     result['btc_value'] = []
     result['usdt_value'] = []
 
+    iteration_start_at = datetime.now()
+
     for manager in backtest(start_date=start_date,
                             end_date=end_date,
                             start_balances=starting_balance,
@@ -227,9 +232,13 @@ if __name__ == "__main__":
             'value': bridge_value, 'diff': bridge_diff
         })
 
-        progress = (manager.datetime - start_date).total_seconds() / 60
+        total_iteration_so_far = (manager.datetime - start_date).total_seconds() / 60
+        iteration_left = (start_date - manager.datetime).total_seconds() / 60
+        now = datetime.now()
+        average_per_iteration = ((now - iteration_start_at).total_seconds() * 1000) / total_iteration_so_far
+
         # pbar.update(progress)
-        print(f'progress : {get_progress(progress, total_minutes)}')
+        print_progress(total_iteration_so_far, total_minutes, average_per_iteration)
 
     with open(backtest_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=4)
