@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .pair import Pair
-
+import backtest_globals
 
 class ScoutHistory(Base):
     __tablename__ = "scout_history"
@@ -36,7 +36,7 @@ class ScoutHistory(Base):
         self.target_ratio = target_ratio
         self.current_coin_price = current_coin_price
         self.other_coin_price = other_coin_price
-        self.datetime = datetime.utcnow()
+        self.datetime = backtest_globals.backtest_current_date or datetime.utcnow()
 
     @hybrid_property
     def current_ratio(self):

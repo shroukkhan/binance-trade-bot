@@ -7,6 +7,7 @@ import binance.client
 from binance import Client
 from sqlitedict import SqliteDict
 
+import backtest_globals
 from .binance_api_manager import BinanceAPIManager, BinanceOrderBalanceManager
 from .binance_stream_manager import BinanceCache, BinanceOrder
 from .config import Config
@@ -137,7 +138,7 @@ class MockBinanceManager(BinanceAPIManager):
 
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, False, self.datetime)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -175,7 +176,7 @@ class MockBinanceManager(BinanceAPIManager):
 
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, True, self.datetime)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -252,6 +253,8 @@ def backtest(
     db = Database(logger=logger, config=config, uri=backtest_db_url)  # MockDatabase(logger, config, backtest_db_url)
     db.create_database()
     db.set_coins(config.SUPPORTED_COIN_LIST)
+
+    backtest_globals.initialize_globals()
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY, tld=config.BINANCE_TLD),
         sqlite_cache,
@@ -262,6 +265,7 @@ def backtest(
         start_date,
         start_balances,
     )
+    backtest_globals.backtest_current_date = manager.datetime
 
     starting_coin = db.get_coin(starting_coin or config.SUPPORTED_COIN_LIST[0])
     if manager.get_currency_balance(starting_coin.symbol) == 0:
@@ -279,13 +283,16 @@ def backtest(
     yield manager
 
     n = 1
+
     try:
+
         while manager.datetime < end_date:
             try:
                 trader.scout()
             except Exception:  # pylint: disable=broad-except
                 logger.warning(format_exc())
             manager.increment(interval)
+            backtest_globals.backtest_current_date = manager.datetime
             if n % yield_interval == 0:
                 yield manager
             n += 1

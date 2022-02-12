@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .coin import Coin
-
+import backtest_globals
 
 class Interval(enum.Enum):
     MINUTELY = "MINUTELY"
@@ -41,12 +41,13 @@ class CoinValue(Base):
         interval=Interval.MINUTELY,
         datetime: _datetime = None,
     ):
+
         self.coin = coin
         self.balance = balance
         self.usd_price = usd_price
         self.btc_price = btc_price
         self.interval = interval
-        self.datetime = datetime or _datetime.now()
+        self.datetime = backtest_globals.backtest_current_date or datetime or _datetime.now()
 
     @hybrid_property
     def usd_value(self):

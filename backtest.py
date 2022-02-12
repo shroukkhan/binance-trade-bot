@@ -7,7 +7,6 @@ from prettytable import *
 from binance_trade_bot import backtest
 from binance_trade_bot import config
 
-
 def print_progress(current: float, total: float, avg: float):
     progress = round((current / total) * 100, 2)
     ms_left = (total - current) * avg
@@ -134,6 +133,7 @@ if __name__ == "__main__":
                           day=1,
                           hour=0,
                           minute=0)
+
     # end_date = datetime.now()
     end_date = datetime(year=2021,
                         month=7,

@@ -16,6 +16,7 @@ from binance_trade_bot.ratios import CoinStub, RatiosManager
 from .config import Config
 from .logger import Logger
 from .models import *  # pylint: disable=wildcard-import
+import backtest_globals
 
 LogScout = namedtuple("LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"])
 
@@ -148,7 +149,7 @@ class Database:
     def batch_log_scout(self, logs: List[LogScout]):
         session: Session
         with self.db_session() as session:
-            dt = datetime.now()
+            dt = backtest_globals.backtest_current_date or datetime.now()
             session.execute(
                 insert(ScoutHistory),
                 [
@@ -244,8 +245,8 @@ class Database:
         except:
             pass
 
-    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool, trade_date: datetime = None):
-        return TradeLog(self, from_coin, to_coin, selling, trade_date)
+    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
+        return TradeLog(self, from_coin, to_coin, selling)
 
     def send_update(self, model):
         if not self.socketio_connect():
@@ -336,8 +337,8 @@ class TradeLog:
             # from_coin = session.merge(from_coin)
             # to_coin = session.merge(to_coin)
             self.trade = Trade(from_coin, to_coin, selling)
-            if trade_date is not None:
-                self.trade.datetime = trade_date
+            if backtest_globals.backtest_current_date is not None:
+                self.trade.datetime = backtest_globals.backtest_current_date
             session.add(self.trade)
             # Flush so that SQLAlchemy fills in the id column
             session.flush()
