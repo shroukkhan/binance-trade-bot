@@ -221,7 +221,13 @@ Thanks to a group of talented developers, there is now a [Telegram bot for remot
 
 ## Support the Project
 
+Fist of all, support the originator of this bot and buy him a coffee. ☕
+
 <a href="https://www.buymeacoffee.com/edeng" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+If you like my adjustments and you want to support me I would appreciate to get a coffee too. 😜
+
+<a href="https://www.buymeacoffee.com/masaiasuose" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## Join the Chat
 

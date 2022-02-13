@@ -6,7 +6,7 @@ from prettytable import *
 
 from binance_trade_bot import backtest
 from binance_trade_bot import config
-from binance_trade_bot import backtest_globals
+
 
 def print_progress(current: float, total: float, avg: float):
     progress = round((current / total) * 100, 2)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # exit(1)
     history = []
     start_date = datetime(year=2021,
-                          month=2,
+                          month=6,
                           day=1,
                           hour=0,
                           minute=0)
@@ -143,33 +143,61 @@ if __name__ == "__main__":
     #                     minute=0)
 
     c = config.Config()
-    c.SUPPORTED_COIN_LIST = [
-        'LUNA',
-        'FTM',
-        'VET',
-        'AAVE',
-        'CELO',
-        'GRT',
-        'ETH',
-        'DASH',
-        '1INCH',
-        'BTC',
-        'EOS',
-        'CHZ',
-        'FTT',
-        'BAT',
-        'MATIC',
-        'BCH',
-        'ICP',
+    c.SUPPORTED_COIN_LIST = list(dict.fromkeys([
         'FIL',
-        'COMP',
-        'NEO',
+        'AAVE',
+        'VET',
+        'ETH',
+        'GRT',
+        'LINK',
+        'ALGO',
+        'DOT',
+        'SOL',
+        'EOS',
+        'UNI',
+        'FTT',
+        'BTC',
+        'FTM',
         'NEAR',
-        'EGLD',
+        'ICP',
+        'MATIC',
+        'LTC',
+        'ONE',
+        'ADA',
+        'DOGE',
+        'BCH',
         'TRX',
-    ]
-    starting_coin = 'LUNA'
-    starting_balance = {'USDT': 150}
+        'CAKE',
+        'IOTA',
+        'BTC',
+        'ETH',
+        'ADA',
+        'SOL',
+        'XRP',
+        'DOT',
+        'LINK',
+        'UNI',
+        'LTC',
+        'ALGO'
+    ]))
+    # c.SUPPORTED_COIN_LIST = [
+    #     'BTC',
+    #     'ETH',
+    #     'ADA',
+    #     'SOL',
+    #     'XRP',
+    #     'DOT',
+    #     'LINK',
+    #     'UNI',
+    #     'LTC',
+    #     'ALGO'
+    # ]
+    c.USE_MARGIN = True
+    c.STRATEGY = 'multiple_coins'
+    c.SCOUT_MARGIN = 0.65
+    starting_coin = 'SOL'
+    starting_balance = {'USDT': 0, 'SOL': 1.72, 'FIL': 8.1, 'BTC': 0.0023, 'ETH': 0.178, 'BNB': 0.05314571,
+                        'SOLO': 0.27060350}
 
     if starting_coin not in c.SUPPORTED_COIN_LIST:
         raise Exception(f'Coin {starting_coin} not in c.SUPPORTED_COIN_LIST')

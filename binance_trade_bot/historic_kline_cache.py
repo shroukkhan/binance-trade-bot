@@ -1,18 +1,19 @@
-from datetime import datetime, timedelta, timezone
 import io
-from binance.client import Client
-from binance.exceptions import BinanceAPIException
+import zipfile
+from concurrent.futures import TimeoutError
+from datetime import datetime, timedelta, timezone
+
 import requests
 import xmltodict
-import zipfile
-
-from pebble import ProcessPool
-from concurrent.futures import TimeoutError
+from binance.client import Client
+from binance.exceptions import BinanceAPIException
 from diskcache import Cache
+from pebble import ProcessPool
 
 from .logger import Logger
 
 cache = Cache("data", size_limit=int(1e12))
+
 
 def download(link):
     r = requests.get(link, headers={
@@ -46,7 +47,7 @@ def addtocache(link):
         cache[f"{ticker_symbol} - {datestr}"] = price
 
     if len(dates) > 2:
-        dateDiff =  dates[1] - dates[0]
+        dateDiff = dates[1] - dates[0]
 
         lastDate = dates[-1]
         date = dates[0]
@@ -58,6 +59,7 @@ def addtocache(link):
             date += dateDiff
 
     return link
+
 
 class HistoricKlineCache:
     def __init__(self, client: Client, logger: Logger):
@@ -74,10 +76,10 @@ class HistoricKlineCache:
             price = self.get_historical_ticker_price(ticker_symbol, current_date)
             if price is not None:
                 data.append(price)
-            
+
             current_date = current_date + timedelta(minutes=1)
 
-        return data        
+        return data
 
     def get_historical_ticker_price(self, ticker_symbol: str, date: datetime):
         """
@@ -98,14 +100,15 @@ class HistoricKlineCache:
             last_day = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=1)
             if date >= last_day or end_date >= last_day:
                 try:
-                    data = self.client.get_historical_klines(ticker_symbol,  "1m", target_date, end_date_str, limit=1000)
+                    data = self.client.get_historical_klines(ticker_symbol, "1m", target_date, end_date_str, limit=1000)
                     for kline in data:
                         kl_date = datetime.utcfromtimestamp(kline[0] / 1000)
                         kl_datestr = kl_date.strftime("%d %b %Y %H:%M:%S")
                         kl_price = float(kline[1])
                         cache[f"{ticker_symbol} - {kl_datestr}"] = kl_price
                 except BinanceAPIException as e:
-                    if e.code == -1121: # invalid symbol
+                    self.logger.warning(f'Failed to get coin history : {e.message}', False)
+                    if e.code == -1121:  # invalid symbol
                         self.get_historical_klines_from_api(ticker_symbol, "1m", target_date, end_date_str, limit=1000)
                     else:
                         raise e
@@ -126,8 +129,9 @@ class HistoricKlineCache:
                 val = None
         return val
 
-    def get_historical_klines_from_api(self, ticker_symbol='ETCUSDT', interval='1m', target_date=None, end_date=None, limit=None,
-                              frame='daily'):
+    def get_historical_klines_from_api(self, ticker_symbol='ETCUSDT', interval='1m', target_date=None, end_date=None,
+                                       limit=None,
+                                       frame='daily'):
         fromdate = datetime.strptime(target_date, "%d %b %Y %H:%M:%S")  # - timedelta(days=1)
         r = requests.get(
             f'https://s3-ap-northeast-1.amazonaws.com/data.binance.vision?delimiter=/&prefix=data/spot/{frame}/klines/{ticker_symbol}/{interval}/',
@@ -148,7 +152,8 @@ class HistoricKlineCache:
             if filedate.date().month == fromdate.date().month and filedate.date().year == fromdate.date().year:
                 links.append('https://data.binance.vision/' + i['Key'])
         if len(links) == 0 and frame == 'daily':
-            return self.get_historical_klines_from_api(ticker_symbol, interval, target_date, end_date, limit, frame='monthly')
+            return self.get_historical_klines_from_api(ticker_symbol, interval, target_date, end_date, limit,
+                                                       frame='monthly')
 
         while len(links) >= 1:
             with ProcessPool() as pool:
@@ -163,6 +168,8 @@ class HistoricKlineCache:
                     except StopIteration:
                         break
                     except TimeoutError as error:
-                        self.logger.info(f"Download of prices for {ticker_symbol} between {target_date} and {end_date} took longer than {error.args[1]} seconds. Retrying")
+                        self.logger.info(
+                            f"Download of prices for {ticker_symbol} between {target_date} and {end_date} took longer than {error.args[1]} seconds. Retrying")
                     except ConnectionError as error:
-                        self.logger.info(f"Download of prices for {ticker_symbol} between {target_date} and {end_date} failed. Retrying")
+                        self.logger.info(
+                            f"Download of prices for {ticker_symbol} between {target_date} and {end_date} failed. Retrying")
