@@ -3,21 +3,31 @@ import sqlite3
 from datetime import datetime, timedelta
 
 from prettytable import *
+from sqlitedict import SqliteDict
 
 from binance_trade_bot import backtest
 from binance_trade_bot import config
 
 
-def print_progress(current: float, total: float, avg: float):
+def print_progress(current: float, total: float, avg: float, now: datetime, target: datetime):
     progress = round((current / total) * 100, 2)
     ms_left = (total - current) * avg
     will_finish_at = datetime.now() + timedelta(milliseconds=ms_left)
-    print(f'progress: {progress}% of {total} iterations, ETA:{will_finish_at} (avg_ms: {avg}, ms_left: {ms_left})')
+    print(
+        f'progress: {progress}% of {total} iterations, '
+        f'ETA:{will_finish_at} '
+        f'( avg_ms: {avg}, ms_left: {ms_left}, now:{now.strftime("%y-%m-%d %H:%M:%S.%f")}, '
+        f'target: {target.strftime("%y-%m-%d %H:%M:%S.%f")} )')
 
-
-def show_jumps(c: config.Config, starting_coin: str, starting_balance: dict, filename: str):
+def show_jumps(c: config.Config,
+               starting_coin: str,
+               starting_balance: dict,
+               current_balance: dict, filename: str,
+               starting_date: datetime, ending_date: datetime,
+               manager):
     db_file = f'.{filename}'  # './data/crypto_trading.db'
     cursor = sqlite3.connect(db_file)
+
 
     db = cursor.cursor()
 
@@ -76,14 +86,27 @@ def show_jumps(c: config.Config, starting_coin: str, starting_balance: dict, fil
     db.execute('select count(*) from trade_history where selling=0')
     numCoinJumps = db.fetchall()[0][0]
 
+    # initial_total_value = 0
+    # for k, v in starting_balance.items():
+    #     initial_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', starting_date)
+    #
+    # final_total_value = 0
+    # for k, v in current_balance.items():
+    #     final_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', ending_date)
+
     msg = f'Stat for bot     : {filename}'
     msg += '\nBot Started    : {}'.format(start_date.strftime("%m/%d/%Y, %H:%M:%S"))
     msg += '\nBot Ended      : {}'.format(end_date.strftime("%m/%d/%Y, %H:%M:%S"))
     msg += '\nNo of Days     : {}'.format(numDays)
     msg += '\nCoins          : {}'.format(','.join(c.SUPPORTED_COIN_LIST))
     msg += '\nStrategy       : {}'.format(c.STRATEGY)
+    msg += '\nUsing Wiggle   : {}'.format(str(c.USE_WIGGLE))
+    msg += '\nWiggle Factor  : {}'.format(c.WIGGLE_FACTOR)
     msg += '\nStart Coin     : {}'.format(starting_coin)
     msg += '\nStart Balance  : {}'.format(str(starting_balance))
+    #msg += '\nStart Balance Value: {}'.format(initial_total_value)
+    msg += '\nFinal Balance  : {}'.format(str(current_balance))
+    #msg += '\nFinal Balance Value: {}'.format(final_total_value)
     msg += '\nUsing margin?  : {}'.format(c.USE_MARGIN)
     msg += '\nScout Margin   : {}'.format(c.SCOUT_MARGIN)
     msg += '\nNo of Jumps    : {} ({:.1f} jumps/day)'.format(numCoinJumps, numCoinJumps / numDays)
@@ -139,17 +162,17 @@ if __name__ == "__main__":
 
     history = []
     start_date = datetime(year=2021,
-                          month=5,
+                          month=7,
                           day=15,
                           hour=0,
                           minute=0)
 
-    # end_date = datetime.now()
-    end_date = datetime(year=2021,
-                        month=5,
-                        day=15,
-                        hour=23,
-                        minute=0)
+    end_date = datetime.now()
+    # end_date = datetime(year=2021,
+    #                     month=5,
+    #                     day=15,
+    #                     hour=23,
+    #                     minute=0)
 
     c = config.Config()
     c.SUPPORTED_COIN_LIST = list(dict.fromkeys([
@@ -202,13 +225,14 @@ if __name__ == "__main__":
     #     'ALGO'
     # ]
     c.USE_MARGIN = True
-    c.STRATEGY = 'multiple_coins'
-    c.SCOUT_MARGIN = 0.65
+    c.STRATEGY = 'default'
+    c.USE_WIGGLE = False
+    # c.COINS_TO_GAIN = []
+    c.SCOUT_MARGIN = 0.7
     starting_coin = 'SOL'
-    starting_balance = {'USDT': 0, 'SOL': 1.72, 'FIL': 8.1, 'BTC': 0.0023, 'ETH': 0.178, 'BNB': 0.05314571,
-                        'SOLO': 0.27060350}
+    starting_balance = {'USDT': 100}
 
-
+    starting_balance_copy = starting_balance.copy()
 
     if starting_coin not in c.SUPPORTED_COIN_LIST:
         raise Exception(f'Coin {starting_coin} not in c.SUPPORTED_COIN_LIST')
@@ -221,15 +245,7 @@ if __name__ == "__main__":
     result = {}
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     backtest_file = f'./backtest_results/backtest-{timestamp}.json'
-    result_file = f'./backtest_results/backtest-{timestamp}.txt'
-
-    # msg = show_jumps(c=c, starting_coin=starting_coin, starting_balance=starting_balance,
-    #                  filename='/backtest_results/backtest-20220213-222603.db')
-    #
-    # with open(result_file, "w") as f:
-    #     f.writelines(msg)
-    # exit(1)
-
+    result_file = f'./backtest_results/backtest-{timestamp}'
 
     __sqlite_db = f'/backtest_results/backtest-{timestamp}.db'
     backtest_database = f'sqlite://{__sqlite_db}'
@@ -250,6 +266,26 @@ if __name__ == "__main__":
                             config=c,
                             backtest_db_url=backtest_database
                             ):
+        # s = datetime(year=2021,
+        #                       month=11,
+        #                       day=1,
+        #                       hour=0,
+        #                       minute=0)
+        # e = datetime(year=2021,
+        #                     month=12,
+        #                     day=1,
+        #                     hour=0,
+        #                     minute=0)
+        # msg = show_jumps(c=c, starting_coin=starting_coin, starting_balance=starting_balance,
+        #                  current_balance={'USDT': 100},
+        #                  filename='/backtest_results/backtest-20220215-135035.db',
+        #                  starting_date=s, ending_date=e , manager=manager)
+        #
+        # with open(result_file, "w") as f:
+        #     f.writelines(msg)
+        # exit(1)
+
+        b = manager.balances
         btc_value = manager.collate_coins("BTC")
         bridge_value = manager.collate_coins(manager.config.BRIDGE.symbol)
         history.append((btc_value, bridge_value))
@@ -283,18 +319,24 @@ if __name__ == "__main__":
         })
 
         total_iteration_so_far = max(1, (manager.datetime - start_date).total_seconds() / 60)
-        iteration_left = (start_date - manager.datetime).total_seconds() / 60
+        # iteration_left = (end_date - manager.datetime).total_seconds() / 60
         now = datetime.now()
         average_per_iteration = ((now - iteration_start_at).total_seconds() * 1000) / total_iteration_so_far
 
         # pbar.update(progress)
-        print_progress(total_iteration_so_far, total_minutes, average_per_iteration)
+        print_progress(total_iteration_so_far, total_minutes, average_per_iteration, manager.datetime, end_date)
 
     with open(backtest_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=4)
 
-    #show_jumps(__sqlite_db)
-    msg = show_jumps(c=c, starting_coin=starting_coin, starting_balance=starting_balance,
+    # show_jumps(__sqlite_db)
+    msg = show_jumps(c=c,
+                     starting_coin=starting_coin,
+                     starting_balance=starting_balance_copy,
+                     current_balance=manager.balances,
+                     starting_date=start_date,
+                     ending_date=end_date,
+                     manager=manager,
                      filename=__sqlite_db)
 
     with open(result_file, "w") as f:

@@ -90,6 +90,40 @@ class MockBinanceManager(BinanceAPIManager):
             val = self.sqlite_cache.get(key, None)
         return val if val != 0.0 else None
 
+    def get_ticker_price_on_date(self, ticker_symbol: str, get_price_on_date: datetime):
+        if ticker_symbol == 'USDTUSDT': return 1.0
+        """
+        Get ticker price of a specific coin
+        """
+        target_date = get_price_on_date.strftime("%d %b %Y %H:%M:%S")
+        key = f"{ticker_symbol} - {target_date}"
+        val = self.sqlite_cache.get(key, None)
+        if val is None:
+            end_date = get_price_on_date + timedelta(minutes=1000)
+            if end_date > datetime.now():
+                end_date = datetime.now()
+            end_date_str = end_date.strftime("%d %b %Y %H:%M:%S")
+            self.logger.info(f"Fetching prices for {ticker_symbol} between {self.datetime} and {end_date}")
+            historical_klines = self.binance_client.get_historical_klines(
+                ticker_symbol, "1m", target_date, end_date_str, limit=1000
+            )
+            no_data_cur_date = get_price_on_date
+            no_data_end_date = (
+                end_date
+                if len(historical_klines) == 0
+                else (datetime.utcfromtimestamp(historical_klines[0][0] / 1000) - timedelta(minutes=1))
+            )
+            while no_data_cur_date <= no_data_end_date:
+                self.sqlite_cache[f"{ticker_symbol} - {no_data_cur_date.strftime('%d %b %Y %H:%M:%S')}"] = 0.0
+                no_data_cur_date += timedelta(minutes=1)
+            for result in historical_klines:
+                date = datetime.utcfromtimestamp(result[0] / 1000).strftime("%d %b %Y %H:%M:%S")
+                price = float(result[1])
+                self.sqlite_cache[f"{ticker_symbol} - {date}"] = price
+            self.sqlite_cache.commit()
+            val = self.sqlite_cache.get(key, None)
+        return val if val != 0.0 else None
+
     def get_currency_balance(self, currency_symbol: str, force=False):
         """
         Get balance of a specific coin
@@ -151,6 +185,9 @@ class MockBinanceManager(BinanceAPIManager):
         target_symbol = target_coin
 
         origin_balance = self.get_currency_balance(origin_symbol)
+        if origin_symbol in self.config.COINS_TO_GAIN:
+            origin_balance = origin_balance * 0.3  # only sell 30% of the coins
+
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = self.get_ticker_price(origin_symbol + target_symbol)
         assert abs(sell_price - from_coin_price) < 1e-15

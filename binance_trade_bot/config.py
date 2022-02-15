@@ -76,10 +76,20 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
         enable_paper_trading = (
-                                            os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION,
-                                                                                                 "enable_paper_trading")
-                                    )
+                os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION,
+                                                                     "enable_paper_trading")
+        )
         self.ENABLE_PAPER_TRADING = str(enable_paper_trading).lower() == "true"
+
+        self.WIGGLE_FACTOR = 0.0005
+        self.USE_WIGGLE = False
+        self.COINS_TO_GAIN = ['ETH',
+                              'BTC',
+                              'XRP',
+                              'SOL',
+                              'ADA',
+                              'LUNA',
+                              'AVAX']  # we do not jump OUT of these coins..because these coins are for long term holding
 
         # api port
         self.API_PORT = int(

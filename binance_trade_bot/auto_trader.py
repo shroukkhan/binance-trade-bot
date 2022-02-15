@@ -6,6 +6,7 @@ from typing import Dict, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
+import backtest_globals
 from .binance_api_manager import BinanceAPIManager
 from .config import Config
 from .database import Database, LogScout
@@ -14,13 +15,21 @@ from .models import CoinValue, Pair
 from .postpone import postpone_heavy_calls
 from .ratios import CoinStub
 
+DEFAULT_RATIO = -99999.99
+
+
+# WIGGLE_FACTOR = 0.005
+
 
 class AutoTrader(ABC):
+
     def __init__(self, binance_manager: BinanceAPIManager, database: Database, logger: Logger, config: Config):
         self.manager = binance_manager
         self.db = database
         self.logger = logger
         self.config = config
+        self.ratio = DEFAULT_RATIO
+        # self.threshold = DEFAULT_RATIO
 
     def initialize(self):
         self.initialize_trade_thresholds()
@@ -64,12 +73,12 @@ class AutoTrader(ABC):
         return None
 
     def update_trade_threshold(
-        self,
-        to_coin: CoinStub,
-        from_coin: Optional[CoinStub],
-        to_coin_buy_price: float,
-        to_coin_amount: float,
-        quote_amount: float,
+            self,
+            to_coin: CoinStub,
+            from_coin: Optional[CoinStub],
+            to_coin_buy_price: float,
+            to_coin_amount: float,
+            quote_amount: float,
     ) -> bool:
         """
         Update all the coins with the threshold of buying the current held coin
@@ -195,7 +204,7 @@ class AutoTrader(ABC):
         ...
 
     def _get_ratios(
-        self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log=True
+            self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log=True
     ) -> Tuple[Dict[Tuple[int, int], float], Dict[str, Tuple[float, float]]]:
         """
         Given a coin, get the current price ratio for every other enabled coin
@@ -229,12 +238,12 @@ class AutoTrader(ABC):
 
             if self.config.USE_MARGIN:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
-                    (1 - transaction_fee) * coin_opt_coin_ratio / target_ratio - 1 - self.config.SCOUT_MARGIN / 100
+                        (1 - transaction_fee) * coin_opt_coin_ratio / target_ratio - 1 - self.config.SCOUT_MARGIN / 100
                 )
             else:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
-                    coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
-                ) - target_ratio
+                                                              coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
+                                                      ) - target_ratio
 
             if enable_scout_log:
                 scout_logs.append(
@@ -254,7 +263,7 @@ class AutoTrader(ABC):
 
     @postpone_heavy_calls
     def _jump_to_best_coin(
-        self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
+            self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
     ):  # pylint: disable=too-many-locals
         """
         Given a coin, search for a coin to jump to
@@ -288,11 +297,12 @@ class AutoTrader(ABC):
             # if we have any viable options, pick the one with the biggest ratio
             if ratio_dict:
                 new_best_pair = max(ratio_dict, key=ratio_dict.get)
+                new_best_ratio = ratio_dict.get(new_best_pair)
                 new_best_coin = CoinStub.get_by_idx(new_best_pair[1])
                 if not is_initial_coin:  # update thresholds because we should buy anyway when walk through chain
                     # This should be performed in a single transaction so we don't leave our ratios in invalid state
                     if not self.update_trade_threshold(
-                        last_coin, new_best_coin, last_coin_buy_price, last_coin_amount, last_coin_quote
+                            last_coin, new_best_coin, last_coin_buy_price, last_coin_amount, last_coin_quote
                     ):
                         self.db.ratios_manager.rollback()
                         return
@@ -308,18 +318,50 @@ class AutoTrader(ABC):
             if len(jump_chain) > 2:
                 self.logger.info(f"Squashed jump chain: {jump_chain}")
             if jump_chain[0] != jump_chain[-1]:
-                self.logger.info(f"Will be jumping from {coin.symbol} to {last_coin.symbol}")
-                result = self.transaction_through_bridge(coin, last_coin, coin_sell_price, last_coin_buy_price)
-                expected_sold_quantity = self.manager.sell_quantity(coin.symbol, self.config.BRIDGE.symbol, coin_amount)
-                expected_bridge = expected_sold_quantity * coin_sell_price * 0.999 + bridge_balance
-                expected_bought_quantity_no_fees = self.manager.buy_quantity(
-                    last_coin.symbol, self.config.BRIDGE.symbol, expected_bridge, last_coin_buy_price
-                )
-                self.logger.info(
-                    f"Expected: {expected_bought_quantity_no_fees:0.08f}, "
-                    f"Actual: {result.cumulative_filled_quantity:0.08f}, "
-                    f"Slippage: {expected_bought_quantity_no_fees/result.cumulative_filled_quantity - 1:0.06%}"
-                )
+                '''
+                    ## track ratio change
+                    
+                    The idea is similar to trailing buy order
+                    
+                    the ratio can ONLY increase, but it can not go down , it goes down below certain value, we immediately swap
+                '''
+                current_ratio = new_best_ratio  # math.floor(new_best_ratio * 1000) / 1000.0
+                '''
+                if current_ratio < threshold :
+                    swap
+                if current_ratio > threshold
+                    increase threshold
+                
+                '''
+                now = f'[{backtest_globals.backtest_current_date}] ' or ''
+
+                if current_ratio > self.ratio:
+                    self.ratio = current_ratio
+                    self.logger.info(f"{now}Increased ratio threshold from {coin.symbol} to {last_coin.symbol} , "
+                                     f"current_ratio : {current_ratio}")
+                elif self.config.USE_WIGGLE and current_ratio > self.ratio - self.config.WIGGLE_FACTOR:
+                    self.logger.info(
+                        f"{now}Wiggling inside {coin.symbol} to {last_coin.symbol} , current_ratio : {current_ratio}, "
+                        f"wiggle threshold: {self.ratio - self.config.WIGGLE_FACTOR}")
+                else:
+                    self.logger.info(f"{now}Will be jumping from {coin.symbol} to {last_coin.symbol}, "
+                                     f"current_ratio : {current_ratio}")
+
+                    result = self.transaction_through_bridge(coin, last_coin, coin_sell_price, last_coin_buy_price)
+                    ### if in coins to gain, dont sell all amount..sell % profit cxxxxx dunno
+                    expected_sold_quantity = self.manager.sell_quantity(coin.symbol, self.config.BRIDGE.symbol,
+                                                                        coin_amount)
+                    expected_bridge = expected_sold_quantity * coin_sell_price * 0.999 + bridge_balance
+                    expected_bought_quantity_no_fees = self.manager.buy_quantity(
+                        last_coin.symbol, self.config.BRIDGE.symbol, expected_bridge, last_coin_buy_price
+                    )
+                    self.logger.info(
+                        f"{now}Expected: {expected_bought_quantity_no_fees:0.08f}, "
+                        f"Actual: {result.cumulative_filled_quantity:0.08f}, "
+                        f"Slippage: {expected_bought_quantity_no_fees / result.cumulative_filled_quantity - 1:0.06%}"
+                    )
+                    self.ratio = DEFAULT_RATIO  # reset the threshold
+
             else:
                 self.update_trade_threshold(coin, None, coin_sell_price, 0, quote_amount)
                 self.logger.info(f"Eliminated jump loop from {coin.symbol} to {coin.symbol}")
@@ -333,7 +375,8 @@ class AutoTrader(ABC):
 
         coins = CoinStub.get_all()
         if all(
-            bridge_balance <= self.manager.get_min_notional(coin.symbol, self.config.BRIDGE.symbol) for coin in coins
+                bridge_balance <= self.manager.get_min_notional(coin.symbol, self.config.BRIDGE.symbol) for coin in
+                coins
         ):
             return None
 
