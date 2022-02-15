@@ -161,11 +161,11 @@ def show_jumps(c: config.Config,
 if __name__ == "__main__":
 
     history = []
-    start_date = datetime(year=2021,
-                          month=7,
-                          day=15,
-                          hour=0,
-                          minute=0)
+    start_date = datetime(year=2022,
+                          month=1,
+                          day=2,
+                          hour=4,
+                          minute=26)
 
     end_date = datetime.now()
     # end_date = datetime(year=2021,
@@ -229,8 +229,8 @@ if __name__ == "__main__":
     c.USE_WIGGLE = False
     # c.COINS_TO_GAIN = []
     c.SCOUT_MARGIN = 0.7
-    starting_coin = 'SOL'
-    starting_balance = {'USDT': 100}
+    starting_coin = 'FIL'
+    starting_balance = {'USDT': 33}
 
     starting_balance_copy = starting_balance.copy()
 

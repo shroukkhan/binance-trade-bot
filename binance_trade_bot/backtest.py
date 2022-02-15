@@ -186,7 +186,7 @@ class MockBinanceManager(BinanceAPIManager):
 
         origin_balance = self.get_currency_balance(origin_symbol)
         if origin_symbol in self.config.COINS_TO_GAIN:
-            origin_balance = origin_balance * 0.3  # only sell 30% of the coins
+            origin_balance = origin_balance * 0.75  # only sell 75% of the coins
 
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = self.get_ticker_price(origin_symbol + target_symbol)

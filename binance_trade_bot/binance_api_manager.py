@@ -48,12 +48,12 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
     PERSIST_FILE_PATH = "data/paper_wallet.json"
 
     def __init__(
-        self,
-        bridge_symbol: str,
-        client: Client,
-        cache: BinanceCache,
-        initial_balances: Dict[str, float],
-        read_persist=True,
+            self,
+            bridge_symbol: str,
+            client: Client,
+            cache: BinanceCache,
+            initial_balances: Dict[str, float],
+            read_persist=True,
     ):
         self.balances = initial_balances
         self.bridge = bridge_symbol
@@ -147,13 +147,13 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
 
 class BinanceAPIManager:  # pylint:disable=too-many-public-methods
     def __init__(
-        self,
-        client: Client,
-        cache: BinanceCache,
-        config: Config,
-        db: Database,
-        logger: Logger,
-        order_balance_manager: AbstractOrderBalanceManager,
+            self,
+            client: Client,
+            cache: BinanceCache,
+            config: Config,
+            db: Database,
+            logger: Logger,
+            order_balance_manager: AbstractOrderBalanceManager,
     ):
         self.binance_client = client
         self.db = db
@@ -166,10 +166,10 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
     @staticmethod
     def _common_factory(
-        config: Config,
-        db: Database,
-        logger: Logger,
-        ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
+            config: Config,
+            db: Database,
+            logger: Logger,
+            ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
     ) -> "BinanceAPIManager":
         cache = BinanceCache()
         # initializing the client class calls `ping` API endpoint, verifying the connection
@@ -188,7 +188,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
     @staticmethod
     def create_manager_paper_trading(
-        config: Config, db: Database, logger: Logger, initial_balances: Optional[Dict[str, float]] = None
+            config: Config, db: Database, logger: Logger, initial_balances: Optional[Dict[str, float]] = None
     ) -> "BinanceAPIManager":
         return BinanceAPIManager._common_factory(
             config,
@@ -213,7 +213,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
         if self.config.BINANCE_TLD != "com":
             return float(0.001)
-        
+
         base_fee = self.get_trade_fees()[origin_coin + target_coin]
         if not self.get_using_bnb_for_fees():
             return base_fee
@@ -312,7 +312,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         return self.retry(self._buy_alt, origin_coin, target_coin, buy_price)
 
     def buy_quantity(
-        self, origin_symbol: str, target_symbol: str, target_balance: float = None, from_coin_price: float = None
+            self, origin_symbol: str, target_symbol: str, target_balance: float = None, from_coin_price: float = None
     ):
         target_balance = target_balance or self.get_currency_balance(target_symbol)
         from_coin_price = from_coin_price or self.get_ticker_price(origin_symbol + target_symbol)
@@ -380,6 +380,12 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         from_coin_price = sell_price
 
         order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
+
+        if origin_symbol in self.config.COINS_TO_GAIN:
+            self.logger.info(f"{origin_symbol} is one of the restricted coins {str(self.config.COINS_TO_GAIN)}, "
+                             f"we will sell {self.config.COINS_TO_GAIN_PCT * 100}% of it ")
+            order_quantity = order_quantity * self.config.COINS_TO_GAIN_PCT
+
         self.logger.info(f"Selling {order_quantity} of {origin_symbol}")
 
         self.logger.info(f"Balance is {origin_balance}")

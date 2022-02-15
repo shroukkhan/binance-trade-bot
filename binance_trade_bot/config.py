@@ -21,7 +21,11 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "tld": "com",
             "strategy": "default",
             "enable_paper_trading": False,
-            "api_port": 5123
+            "api_port": 5123,
+            "use_wiggle": True,
+            "wiggle_factor": 0.0005,
+            "coins_to_gain": "ETH,BTC,XRP,SOL,ADA",
+            "coins_to_gain_pct": 0.5  # only sell  0.5 ( or 50% ) of long hold coins
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -81,15 +85,22 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         )
         self.ENABLE_PAPER_TRADING = str(enable_paper_trading).lower() == "true"
 
-        self.WIGGLE_FACTOR = 0.0005
-        self.USE_WIGGLE = False
-        self.COINS_TO_GAIN = ['ETH',
-                              'BTC',
-                              'XRP',
-                              'SOL',
-                              'ADA',
-                              'LUNA',
-                              'AVAX']  # we do not jump OUT of these coins..because these coins are for long term holding
+        # extra config added by khan
+        self.WIGGLE_FACTOR = float(
+            os.environ.get("WIGGLE_FACTOR") or config.get(USER_CFG_SECTION, "wiggle_factor")
+        )
+
+        use_wiggle = os.environ.get("USE_WIGGLE") or config.get(USER_CFG_SECTION, "use_wiggle")
+        self.USE_WIGGLE = {"true": True, "false": False}.get(str(use_wiggle).lower())
+
+        coins_to_gain = [
+            coin.strip() for coin in config.get(USER_CFG_SECTION, "coins_to_gain").split(',') if coin.strip()
+        ]
+        self.COINS_TO_GAIN = coins_to_gain  # we do not jump OUT of these coins..because these coins are for long term holding
+
+        self.COINS_TO_GAIN_PCT = float(
+            os.environ.get("COINS_TO_GAIN_PCT") or config.get(USER_CFG_SECTION, "coins_to_gain_pct")
+        )
 
         # api port
         self.API_PORT = int(
