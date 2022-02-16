@@ -16,7 +16,6 @@ services:
       - ./config2:/app/config
     command: ./start_bot.sh
     environment:
-      - PYTHONPATH="${PYTHONPATH}:/app/binance_trade_bot"
       - PYTHONUNBUFFERED=1
       - TZ=Asia/Bangkok
 #  api-2:
