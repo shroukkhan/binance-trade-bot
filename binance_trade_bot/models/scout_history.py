@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .pair import Pair
-import backtest_globals
+from .. import backtest_globals
 
 class ScoutHistory(Base):
     __tablename__ = "scout_history"

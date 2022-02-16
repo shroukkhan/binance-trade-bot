@@ -7,7 +7,7 @@ import binance.client
 from binance import Client
 from sqlitedict import SqliteDict
 
-import backtest_globals
+from . import backtest_globals
 from .binance_api_manager import BinanceAPIManager, BinanceOrderBalanceManager
 from .binance_stream_manager import BinanceCache, BinanceOrder
 from .config import Config
@@ -291,7 +291,6 @@ def backtest(
     db.create_database()
     db.set_coins(config.SUPPORTED_COIN_LIST)
 
-    backtest_globals.initialize_globals()
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY, tld=config.BINANCE_TLD),
         sqlite_cache,

@@ -16,7 +16,7 @@ from binance_trade_bot.ratios import CoinStub, RatiosManager
 from .config import Config
 from .logger import Logger
 from .models import *  # pylint: disable=wildcard-import
-import backtest_globals
+from . import backtest_globals
 
 LogScout = namedtuple("LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"])
 

@@ -6,7 +6,7 @@ from typing import Dict, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-import backtest_globals
+from . import backtest_globals
 from .binance_api_manager import BinanceAPIManager
 from .config import Config
 from .database import Database, LogScout

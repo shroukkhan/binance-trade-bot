@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .coin import Coin
-import backtest_globals
+from .. import backtest_globals
 
 class CurrentCoin(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "current_coin_history"
