@@ -22,10 +22,10 @@ class Logger:
         self.LogLevel = level
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         # default is "logs/crypto_trading.log"
-        fh = logging.FileHandler(f"logs/{logging_service}.log")
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        self.Logger.addHandler(fh)
+        # fh = logging.FileHandler(f"logs/{logging_service}.log")
+        # fh.setLevel(logging.DEBUG)
+        # fh.setFormatter(formatter)
+        # self.Logger.addHandler(fh)
 
         # logging to console
         ch = logging.StreamHandler()
