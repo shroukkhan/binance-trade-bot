@@ -157,8 +157,8 @@ class MockBinanceManager(BinanceAPIManager):
         order_filled_quantity = order_quantity * (1 - self.get_fee(origin_coin, target_coin, False))
         self.balances[origin_symbol] = self.balances.get(origin_symbol, 0) + order_filled_quantity
         self.logger.info(
-            f"Bought {origin_symbol}, balance now: {self.balances[origin_symbol]} - bridge: "
-            f"{self.balances[target_symbol]}"
+            f"Bought {self.balances[origin_symbol]}{origin_symbol} for {from_coin_price}{target_symbol}, bridge amount left: "
+            f"{self.balances[target_symbol]}{target_symbol}"
         )
 
         order = BinanceOrder(
