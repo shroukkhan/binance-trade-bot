@@ -208,6 +208,8 @@ class AutoTrader(ABC):
     ) -> Tuple[Dict[Tuple[int, int], float], Dict[str, Tuple[float, float]]]:
         """
         Given a coin, get the current price ratio for every other enabled coin
+        coin_sell_price = original price of origin coin
+        quote_amount = current price of origin coin
         """
         ratio_dict: Dict[(int, int), float] = {}
         price_amounts: Dict[str, (float, float)] = {}
@@ -348,7 +350,6 @@ class AutoTrader(ABC):
                                      f"current_ratio : {current_ratio}")
 
                     result = self.transaction_through_bridge(coin, last_coin, coin_sell_price, last_coin_buy_price)
-                    ### if in coins to gain, dont sell all amount..sell % profit cxxxxx dunno
                     expected_sold_quantity = self.manager.sell_quantity(coin.symbol, self.config.BRIDGE.symbol,
                                                                         coin_amount)
                     expected_bridge = expected_sold_quantity * coin_sell_price * 0.999 + bridge_balance
