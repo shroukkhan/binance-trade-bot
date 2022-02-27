@@ -122,7 +122,7 @@ class MockBinanceManager(BinanceAPIManager):
                 self.sqlite_cache[f"{ticker_symbol} - {date}"] = price
             self.sqlite_cache.commit()
             val = self.sqlite_cache.get(key, None)
-        return val if val != 0.0 else None
+        return val if val != 0.0 else 0.0
 
     def get_currency_balance(self, currency_symbol: str, force=False):
         """
@@ -186,7 +186,13 @@ class MockBinanceManager(BinanceAPIManager):
 
         origin_balance = self.get_currency_balance(origin_symbol)
         if origin_symbol in self.config.COINS_TO_GAIN:
-            origin_balance = origin_balance * 0.75  # only sell 75% of the coins
+            to_keep = self.config.COINS_TO_GAIN[origin_symbol]
+            to_sell = 1 - to_keep
+            self.logger.info(
+                f"{origin_symbol} is one of the coins to gain, "
+                f"we will keep {to_keep * 100}% , send sell {to_sell * 100}% of it ")
+
+            origin_balance = origin_balance * to_sell
 
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = self.get_ticker_price(origin_symbol + target_symbol)

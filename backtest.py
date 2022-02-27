@@ -86,13 +86,13 @@ def show_jumps(c: config.Config,
     db.execute('select count(*) from trade_history where selling=0')
     numCoinJumps = db.fetchall()[0][0]
 
-    # initial_total_value = 0
-    # for k, v in starting_balance.items():
-    #     initial_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', starting_date)
-    #
-    # final_total_value = 0
-    # for k, v in current_balance.items():
-    #     final_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', ending_date)
+    initial_total_value = 0
+    for k, v in starting_balance.items():
+        initial_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', starting_date)
+
+    final_total_value = 0
+    for k, v in current_balance.items():
+        final_total_value += v * manager.get_ticker_price_on_date(k + 'USDT', ending_date)
 
     msg = f'Stat for bot     : {filename}'
     msg += '\nBot Started    : {}'.format(start_date.strftime("%m/%d/%Y, %H:%M:%S"))
@@ -104,7 +104,7 @@ def show_jumps(c: config.Config,
     msg += '\nWiggle Factor  : {}'.format(c.WIGGLE_FACTOR)
     msg += '\nStart Coin     : {}'.format(starting_coin)
     msg += '\nStart Balance  : {}'.format(str(starting_balance))
-    #msg += '\nStart Balance Value: {}'.format(initial_total_value)
+    msg += '\nStart Balance Value: {}'.format(initial_total_value)
     msg += '\nFinal Balance  : {}'.format(str(current_balance))
     #msg += '\nFinal Balance Value: {}'.format(final_total_value)
     msg += '\nUsing margin?  : {}'.format(c.USE_MARGIN)
@@ -161,11 +161,11 @@ def show_jumps(c: config.Config,
 if __name__ == "__main__":
 
     history = []
-    start_date = datetime(year=2022,
-                          month=1,
-                          day=2,
-                          hour=4,
-                          minute=26)
+    start_date = datetime(year=2021,
+                          month=7,
+                          day=26,
+                          hour=0,
+                          minute=0)
 
     end_date = datetime.now()
     # end_date = datetime(year=2021,
@@ -210,7 +210,8 @@ if __name__ == "__main__":
         'LINK',
         'UNI',
         'LTC',
-        'ALGO'
+        'ALGO',
+        'BNB'
     ]))
     # c.SUPPORTED_COIN_LIST = [
     #     'BTC',
@@ -226,15 +227,15 @@ if __name__ == "__main__":
     # ]
     c.USE_MARGIN = True
     c.STRATEGY = 'default'
-    c.USE_WIGGLE = False
+    c.USE_WIGGLE = True
     # c.COINS_TO_GAIN = []
     c.SCOUT_MARGIN = 0.7
-    starting_coin = 'FIL'
-    starting_balance = {'USDT': 33}
+    starting_coin = ''
+    starting_balance = {'USDT': 500}
 
     starting_balance_copy = starting_balance.copy()
 
-    if starting_coin not in c.SUPPORTED_COIN_LIST:
+    if starting_coin != '' and starting_coin not in c.SUPPORTED_COIN_LIST:
         raise Exception(f'Coin {starting_coin} not in c.SUPPORTED_COIN_LIST')
 
     length = end_date - start_date
@@ -266,24 +267,26 @@ if __name__ == "__main__":
                             config=c,
                             backtest_db_url=backtest_database
                             ):
-        # s = datetime(year=2021,
-        #                       month=11,
-        #                       day=1,
-        #                       hour=0,
-        #                       minute=0)
-        # e = datetime(year=2021,
-        #                     month=12,
-        #                     day=1,
-        #                     hour=0,
-        #                     minute=0)
-        # msg = show_jumps(c=c, starting_coin=starting_coin, starting_balance=starting_balance,
-        #                  current_balance={'USDT': 100},
-        #                  filename='/backtest_results/backtest-20220215-135035.db',
-        #                  starting_date=s, ending_date=e , manager=manager)
-        #
-        # with open(result_file, "w") as f:
-        #     f.writelines(msg)
-        # exit(1)
+        s = datetime(year=2021,
+                              month=7,
+                              day=26,
+                              hour=0,
+                              minute=0)
+        e = datetime(year=2022,
+                            month=2,
+                            day=27,
+                            hour=13,
+                            minute=44)
+        msg = show_jumps(c=c,
+                         starting_coin=starting_coin,
+                         starting_balance=starting_balance,
+                         current_balance={'USDT': 0.0747196558000951, 'FIL': 36.61073, 'NEAR': 375.6201000000001, 'ALGO': 561.9879999999998, 'ICP': 6.753369999999997, 'SOL': 28.681140000000013, 'ONE': 5953.387699999999, 'BTC': 0.010958480000000007, 'AAVE': 0.8490259999999994, 'IOTA': 338.307, 'LTC': 1.6736239999999993, 'BCH': 0.3791040000000001, 'EOS': 61.43900000000005, 'DOGE': 1149.3980000000001},
+                         filename='/backtest_results/backtest-20220227-175944.db',
+                         starting_date=s, ending_date=e , manager=manager)
+
+        with open(result_file, "w") as f:
+            f.writelines(msg)
+        exit(1)
 
         b = manager.balances
         btc_value = manager.collate_coins("BTC")

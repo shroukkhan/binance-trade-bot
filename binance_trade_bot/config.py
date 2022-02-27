@@ -24,8 +24,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "api_port": 5123,
             "use_wiggle": True,
             "wiggle_factor": 0.0005,
-            "coins_to_gain": "ETH,BTC,XRP,SOL,ADA",
-            "coins_to_gain_pct": 0.5  # only sell  0.5 ( or 50% ) of long hold coins
+            "coins_to_gain": "ETH:0.3,BTC:0.3,XRP:0.1,SOL:0.2,ADA:0.4",
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -93,14 +92,17 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         use_wiggle = os.environ.get("USE_WIGGLE") or config.get(USER_CFG_SECTION, "use_wiggle")
         self.USE_WIGGLE = {"true": True, "false": False}.get(str(use_wiggle).lower())
 
-        coins_to_gain = [
-            coin.strip() for coin in config.get(USER_CFG_SECTION, "coins_to_gain").split(',') if coin.strip()
-        ]
+        __coins_to_gain = os.environ.get("USER_CFG_SECTION") or config.get(USER_CFG_SECTION, "coins_to_gain")
+        __coins_to_gain = __coins_to_gain.split(',')
+        coins_to_gain = {}
+        for coin_pct in __coins_to_gain:
+            coin_pct = coin_pct.split(':')
+            coin = coin_pct[0].strip()
+            pct = coin_pct[1]
+            coins_to_gain[coin] = float(pct)
+
         self.COINS_TO_GAIN = coins_to_gain  # we do not jump OUT of these coins..because these coins are for long term holding
 
-        self.COINS_TO_GAIN_PCT = float(
-            os.environ.get("COINS_TO_GAIN_PCT") or config.get(USER_CFG_SECTION, "coins_to_gain_pct")
-        )
 
         # api port
         self.API_PORT = int(
