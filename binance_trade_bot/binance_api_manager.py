@@ -379,8 +379,6 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = sell_price
 
-        order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
-
         if origin_symbol in self.config.COINS_TO_GAIN:
             to_keep = self.config.COINS_TO_GAIN[origin_symbol]
             to_sell = 1 - to_keep
@@ -388,7 +386,11 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
                 f"{origin_symbol} is one of the restricted coins, "
                 f"we will keep {to_keep * 100}% , send sell {to_sell * 100}% of it ")
 
-            order_quantity = order_quantity * to_sell
+            origin_balance = origin_balance * to_sell
+
+        order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
+
+
 
         self.logger.info(f"[_sell_alt] Selling {order_quantity} of {origin_symbol}")
 

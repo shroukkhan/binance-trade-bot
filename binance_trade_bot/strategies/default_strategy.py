@@ -87,11 +87,12 @@ class Strategy(AutoTrader):
                 self.manager.get_ticker_price(current_coin.symbol + self.config.BRIDGE.symbol),
             )
             self.logger.info("[initialize_current_coin] Ready to start trading")
-            # self.transaction_through_bridge(
-            #     from_coin=current_coin_symbol,
-            #     to_coin='ADA',
-            #     sell_price=88.33,
-            #     buy_price=0.8597)
         else:
             self.logger.info(f"[initialize_current_coin] We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
+
+        # self.transaction_through_bridge(
+        #     from_coin=current_coin,
+        #     to_coin=self.db.get_coin('ADA'),
+        #     sell_price=88.33,
+        #     buy_price=0.8597)
 
