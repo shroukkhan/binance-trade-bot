@@ -372,7 +372,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         """
         Sell altcoin
         """
-        origin_symbol = origin_coin
+        origin_symbol = origin_coin.strip()
         target_symbol = target_coin
 
         origin_balance = self.get_currency_balance(origin_symbol)
@@ -390,9 +390,9 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
             order_quantity = order_quantity * to_sell
 
-        self.logger.info(f"Selling {order_quantity} of {origin_symbol}")
+        self.logger.info(f"[_sell_alt] Selling {order_quantity} of {origin_symbol}")
 
-        self.logger.info(f"Balance is {origin_balance}")
+        self.logger.info(f"[_sell_alt] Balance is {origin_balance}")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_SELL,
             symbol=origin_symbol + target_symbol,

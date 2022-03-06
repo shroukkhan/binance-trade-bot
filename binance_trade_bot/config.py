@@ -98,7 +98,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         for coin_pct in __coins_to_gain:
             coin_pct = coin_pct.split(':')
             coin = coin_pct[0].strip()
-            pct = coin_pct[1]
+            pct = coin_pct[1].strip()
             coins_to_gain[coin] = float(pct)
 
         self.COINS_TO_GAIN = coins_to_gain  # we do not jump OUT of these coins..because these coins are for long term holding

@@ -11,6 +11,7 @@ class Strategy(AutoTrader):
         super().initialize()
         self.initialize_current_coin()
 
+
     def scout(self):
         """
         Scout for potential jumps from the current coin to another coin
@@ -80,5 +81,16 @@ class Strategy(AutoTrader):
                 self.manager.get_ticker_price(current_coin.symbol + self.config.BRIDGE.symbol),
             )
             self.logger.info("Ready to start trading")
+            # self.transaction_through_bridge(
+            #     from_coin=current_coin_symbol,
+            #     to_coin='ADA',
+            #     sell_price=88.33,
+            #     buy_price=0.8597)
         else:
             self.logger.info(f"We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
+
+        gain = "We shall gain coins in the following manner:\n"
+        for key in self.config.COINS_TO_GAIN:
+            gain += f"{key} -> {self.config.COINS_TO_GAIN[key]*100}%\n"
+
+        self.logger.info(gain)

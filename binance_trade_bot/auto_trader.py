@@ -335,7 +335,7 @@ class AutoTrader(ABC):
                     increase threshold
                 
                 '''
-                now = f'[{backtest_globals.backtest_current_date}] ' or ''
+                now = f'[{backtest_globals.backtest_current_date}] ' if backtest_globals.backtest_current_date is not None else ''
 
                 if current_ratio > self.ratio:
                     self.ratio = current_ratio
