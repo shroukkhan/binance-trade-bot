@@ -63,7 +63,7 @@ def main():  # pylint:disable=too-many-statements
     if config.ENABLE_PAPER_TRADING:
         logger.warning("RUNNING IN PAPER-TRADING MODE")
     else:
-        logger.warning("RUNNING IN REAL TRADING MODE")
+        logger.warning("[STARTUP] RUNNING IN REAL TRADING MODE")
     
     if config.USE_MARGIN:
         logger.info(f"Using scout margin method for calculation of the ratios.")
