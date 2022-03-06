@@ -11,6 +11,12 @@ class Strategy(AutoTrader):
         super().initialize()
         self.initialize_current_coin()
 
+        gain = "We shall gain coins in the following manner:\n"
+        for key in self.config.COINS_TO_GAIN:
+            gain += f"{key} -> {self.config.COINS_TO_GAIN[key] * 100}%\n"
+
+        self.logger.info(gain)
+
 
     def scout(self):
         """
@@ -89,8 +95,3 @@ class Strategy(AutoTrader):
         else:
             self.logger.info(f"We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
 
-        gain = "We shall gain coins in the following manner:\n"
-        for key in self.config.COINS_TO_GAIN:
-            gain += f"{key} -> {self.config.COINS_TO_GAIN[key]*100}%\n"
-
-        self.logger.info(gain)

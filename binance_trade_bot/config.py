@@ -103,7 +103,6 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.COINS_TO_GAIN = coins_to_gain  # we do not jump OUT of these coins..because these coins are for long term holding
 
-
         # api port
         self.API_PORT = int(
             os.environ.get("API_PORT") or config.get(USER_CFG_SECTION, "API_PORT")
