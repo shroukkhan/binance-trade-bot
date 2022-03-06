@@ -18,3 +18,4 @@ tabulate
 prettytable
 pandas
 tqdm
+itsdangerous
