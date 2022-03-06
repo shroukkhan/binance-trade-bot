@@ -383,7 +383,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
             to_keep = self.config.COINS_TO_GAIN[origin_symbol]
             to_sell = 1 - to_keep
             self.logger.info(
-                f"{origin_symbol} is one of the restricted coins, "
+                f"[BUG_FIX] {origin_symbol} is one of the restricted coins, "
                 f"we will keep {to_keep * 100}% , send sell {to_sell * 100}% of it ")
 
             origin_balance = origin_balance * to_sell
