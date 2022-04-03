@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="crypto_trading" uuid="b5849664-7917-485c-917d-076c54e7ab32">
+    <data-source source="LOCAL" name="crypto_trading" uuid="ff2cdd47-3c41-41de-922e-230aeefdfe26">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
@@ -13,19 +13,7 @@
         </library>
       </libraries>
     </data-source>
-    <data-source source="LOCAL" name="crypto_trading [1]" uuid="56c97b08-5794-4a64-b248-80f1ef12fe72">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\AgodaGit\binance-trade-bot\data1\crypto_trading.db</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
-        </library>
-      </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="crypto_trading [2]" uuid="bbbf1c09-712e-48d1-9c59-fabe2ccf52cd">
+    <data-source source="LOCAL" name="crypto_trading [2]" uuid="2e057b48-744a-4f5a-9fb0-adb6e6f02e85">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
