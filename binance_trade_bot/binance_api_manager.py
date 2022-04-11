@@ -379,6 +379,8 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         target_balance = self.get_currency_balance(target_symbol)
         from_coin_price = sell_price
 
+        initial_balance = origin_balance
+
         if origin_symbol in self.config.COINS_TO_GAIN:
             to_keep = self.config.COINS_TO_GAIN[origin_symbol]
             to_sell = 1 - to_keep
@@ -387,6 +389,10 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
                 f"we will keep {to_keep * 100}% , send sell {to_sell * 100}% of it ")
 
             origin_balance = origin_balance * to_sell
+            target_balance = initial_balance - origin_balance
+        else:
+            target_balance = initial_balance
+
 
         order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
 
@@ -394,7 +400,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
         self.logger.info(f"[_sell_alt] Selling {order_quantity} of {origin_symbol}")
 
-        self.logger.info(f"[_sell_alt] Balance is {origin_balance}")
+        self.logger.info(f"[_sell_alt] Initial ( original ) Balance is {initial_balance}")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_SELL,
             symbol=origin_symbol + target_symbol,
@@ -404,12 +410,12 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         self.logger.info(order)
         order = BinanceOrder(order)
 
-        new_balance = self.get_currency_balance(origin_symbol)
-        while new_balance >= origin_balance:
+        current_balance = self.get_currency_balance(origin_symbol)
+        while current_balance >= target_balance:
             # wait at most for 1s to receive websockets update on balances, otherwise should force-fetch balances
             balances_changed = self.cache.balances_changed_event.wait(1.0)
             self.cache.balances_changed_event.clear()
-            new_balance = self.get_currency_balance(origin_symbol, force=(not balances_changed))
+            current_balance = self.get_currency_balance(origin_symbol, force=(not balances_changed))
 
         self.logger.info(f"Sold {origin_symbol}")
 
