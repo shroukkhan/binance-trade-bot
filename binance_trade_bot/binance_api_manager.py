@@ -417,7 +417,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
             self.cache.balances_changed_event.clear()
             current_balance = self.get_currency_balance(origin_symbol, force=(not balances_changed))
 
-        self.logger.info(f"Sold {origin_symbol}")
+        self.logger.info(f"[[_sell_alt]] Sold {origin_symbol}")
 
         @heavy_call
         def write_trade_log():
