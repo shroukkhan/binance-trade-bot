@@ -415,7 +415,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         ## selling 0.26
         ## target balance = 0.26
         iteration_count = 0
-        while current_balance >= target_balance or iteration_count < 30:
+        while current_balance >= target_balance and iteration_count < 30:
             # wait at most for 1s to receive websockets update on balances, otherwise should force-fetch balances
             balances_changed = self.cache.balances_changed_event.wait(1.0)
             self.cache.balances_changed_event.clear()
