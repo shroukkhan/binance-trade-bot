@@ -400,7 +400,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
         self.logger.info(f"[_sell_alt] Selling {order_quantity} of {origin_symbol}")
 
-        self.logger.info(f"[_sell_alt] Initial ( original ) Balance is {initial_balance}")
+        self.logger.info(f"[_sell_alt] Initial ( original ) Balance is {initial_balance} of {origin_symbol}")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_SELL,
             symbol=origin_symbol + target_symbol,
@@ -411,13 +411,19 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
         order = BinanceOrder(order)
 
         current_balance = self.get_currency_balance(origin_symbol)
-        while current_balance >= target_balance:
+        ## current_luna_balance = 0.27
+        ## selling 0.26
+        ## target balance = 0.26
+        iteration_count = 0
+        while current_balance >= target_balance or iteration_count > 30:
             # wait at most for 1s to receive websockets update on balances, otherwise should force-fetch balances
             balances_changed = self.cache.balances_changed_event.wait(1.0)
             self.cache.balances_changed_event.clear()
             current_balance = self.get_currency_balance(origin_symbol, force=(not balances_changed))
+            self.logger.info(f'[_sel_alt] Current balance : {current_balance} {origin_symbol}')
+            iteration_count += 1
 
-        self.logger.info(f"[[_sell_alt]] Sold {origin_symbol}")
+        self.logger.info(f"[_sell_alt] Sold {origin_symbol}")
 
         @heavy_call
         def write_trade_log():
