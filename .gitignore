@@ -20,3 +20,6 @@ apprise.yml
 *.pkl
 data_download.sh
 backtest_results/*
+supported_coin_list
+supported_coin_list1
+supported_coin_list2

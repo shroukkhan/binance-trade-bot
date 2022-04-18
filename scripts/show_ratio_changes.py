@@ -14,10 +14,10 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-db_file_path = "data/crypto_trading.db"
+db_file_path = "../data/crypto_trading.db"
 assert os.path.exists(db_file_path), f"⚠ Unable to find database file at '{db_file_path}'"
 
-user_cfg_file_path = "user.cfg"
+user_cfg_file_path = "../user.cfg"
 assert os.path.exists(user_cfg_file_path), f"⚠ Unable to find user config file at '{user_cfg_file_path}'"
 with open(user_cfg_file_path) as cfg:
     config = ConfigParser()

@@ -8,7 +8,7 @@ from binance.client import Client
 from dateutil import parser
 from prettytable import *
 
-df_file = './data/crypto_trading.db'
+df_file = '../data/crypto_trading.db'
 # db_files = {
 #     'masa_default_btc': './data/crypto_trading.db',
 #     'masa_default_all_coins': './data2/crypto_trading.db'
