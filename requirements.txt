@@ -16,3 +16,5 @@ unicorn-fy==0.11.0
 sortedcontainers
 tabulate
 itsdangerous==2.0.1
+jinja2==3.0.3
+werkzeug==2.0.3
