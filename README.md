@@ -126,7 +126,7 @@ docker-compose up -d sqlitebrowser
 
 ## Bot-testing
 
-You can test the bot on historic data or with paper trading on live data to see how it performs. Papertrading is much faster but isn't as accurate as paper trading.
+You can test the bot on historic data with backtesting or with paper trading on live data to see how it performs. Backtesting is much faster but isn't as accurate as paper trading.
 
 ### Backtesting
 
