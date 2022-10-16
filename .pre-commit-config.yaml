@@ -53,7 +53,7 @@ repos:
   hooks:
   - id: populate-pylint-requirements
     files: ^(dev-)?requirements\.txt$
-    args: [requirements.txt, dev-requirements.txt]
+    args: [requirements.txt, requirements_dev.txt]
 
 - repo: https://github.com/pycqa/pylint
   rev: v2.8.3

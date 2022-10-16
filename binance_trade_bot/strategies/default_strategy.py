@@ -17,7 +17,6 @@ class Strategy(AutoTrader):
 
         self.logger.info(gain)
 
-
     def scout(self):
         """
         Scout for potential jumps from the current coin to another coin
@@ -42,7 +41,8 @@ class Strategy(AutoTrader):
         if current_coin_amount * current_coin_price < self.manager.get_min_notional(
                 current_coin.symbol, self.config.BRIDGE.symbol
         ):
-            self.logger.info(f"Current coin {current_coin.symbol} amount : {current_coin_amount} is below min notional, skip scouting")
+            self.logger.info(
+                f"Current coin {current_coin.symbol} amount : {current_coin_amount} is below min notional, skip scouting")
             return
 
         self._jump_to_best_coin(
@@ -73,7 +73,8 @@ class Strategy(AutoTrader):
             self.logger.info(f"[initialize_current_coin] Setting initial coin to {current_coin_symbol}")
 
             if current_coin_symbol not in self.config.SUPPORTED_COIN_LIST:
-                sys.exit("***\nERROR!\nSince there is no backup file, a proper coin name must be provided at init\n***")
+                sys.exit(f"***\nERROR!\n {current_coin_symbol} not in self.config.SUPPORTED_COIN_LIST!"
+                         f" Since there is no backup file, a proper coin name must be provided at init\n***")
             self.db.set_current_coin(current_coin_symbol)
 
         current_coin = self.db.get_current_coin()
@@ -88,11 +89,11 @@ class Strategy(AutoTrader):
             )
             self.logger.info("[initialize_current_coin] Ready to start trading")
         else:
-            self.logger.info(f"[initialize_current_coin] We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
+            self.logger.info(
+                f"[initialize_current_coin] We have {current_amount} of {current_coin.symbol}, we are ready to start trading")
 
         # self.transaction_through_bridge(
         #     from_coin=current_coin,
         #     to_coin=self.db.get_coin('ADA'),
         #     sell_price=88.33,
         #     buy_price=0.8597)
-
