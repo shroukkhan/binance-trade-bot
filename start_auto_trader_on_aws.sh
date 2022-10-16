@@ -1,1 +1,0 @@
-sudo docker-compose -f docker-compose-2.yml up -d
