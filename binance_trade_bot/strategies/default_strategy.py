@@ -11,7 +11,7 @@ class Strategy(AutoTrader):
         super().initialize()
         self.initialize_current_coin()
 
-        gain = "We shall gain coins in the following manner:\n"
+        gain = "[Oct-16-2022] We shall gain coins in the following manner:\n"
         for key in self.config.COINS_TO_GAIN:
             gain += f"{key} -> {self.config.COINS_TO_GAIN[key] * 100}%\n"
 
