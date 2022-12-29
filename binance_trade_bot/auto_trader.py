@@ -215,6 +215,7 @@ class AutoTrader(ABC):
         price_amounts: Dict[str, (float, float)] = {}
 
         scout_logs = []
+        x = self.db.ratios_manager.get_from_coin(coin.idx)
         for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
             if coin.idx == to_idx:
                 continue

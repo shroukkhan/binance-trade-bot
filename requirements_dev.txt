@@ -3,3 +3,6 @@ pylint-pytest
 pytest
 pytest-timeout
 pathlib
+ipywidgets 
+paramiko
+sshtunnel

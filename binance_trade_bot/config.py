@@ -8,7 +8,7 @@ USER_CFG_SECTION = "binance_user_config"
 
 
 class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
-    def __init__(self):
+    def __init__(self, config_file_path: str = None):
         # Init config
         config = configparser.ConfigParser()
         config["DEFAULT"] = {
@@ -26,12 +26,12 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "wiggle_factor": 0.0005,
             "coins_to_gain": "ETH:0.3,BTC:0.3,XRP:0.1,SOL:0.2,ADA:0.4",
         }
-
-        if not os.path.exists(CFG_FL_NAME):
+        v = config_file_path if config_file_path else CFG_FL_NAME
+        if not os.path.exists(v):
             print("No configuration file (user.cfg) found! See README. Assuming default config...")
             config[USER_CFG_SECTION] = {}
         else:
-            config.read(CFG_FL_NAME)
+            config.read(v)
 
         self.BRIDGE_SYMBOL = os.environ.get("BRIDGE_SYMBOL") or config.get(USER_CFG_SECTION, "bridge")
         self.BRIDGE = Coin(self.BRIDGE_SYMBOL, False)
