@@ -26,10 +26,33 @@ def delete_and_reinsert_into_pairs_table(database: str, coin_pairs: List[Pair]) 
     # Use the connection to execute SQL queries
     cursor = conn.cursor()
     cursor.execute('DELETE FROM pairs')
-    insert_list = [(idx+1, coin.from_coin.symbol, coin.to_coin.symbol, coin.ratio) for idx, coin in enumerate(coin_pairs)]
+    insert_list = [(idx + 1, coin.from_coin.symbol, coin.to_coin.symbol, coin.ratio) for idx, coin in
+                   enumerate(coin_pairs)]
     insert_command = "INSERT INTO %s VALUES (?,?,?,?)" % 'pairs'
 
     cursor.executemany(insert_command, insert_list)
+    conn.commit()
+    conn.close()
+
+
+def update_last_row_in_trade_history_table(database: str,
+                                           alt_trade_amount: float,
+                                           crypto_starting_balance: float,
+                                           crypto_trade_amount: float,
+                                           datetime: str):
+    '''
+    1. Select last row from table trade_history
+    2. Update the row with new values
+    '''
+    conn = sqlite3.connect(database)
+    # Use the connection to execute SQL queries
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM trade_history ORDER BY datetime DESC LIMIT 1')
+    last_row = cursor.fetchone()
+    print(f'Last row in trade_history table: {last_row}')
+    cursor.execute(
+        'UPDATE trade_history SET alt_trade_amount=?, crypto_starting_balance=?, crypto_trade_amount=?, datetime=? WHERE id=?',
+        (alt_trade_amount, crypto_starting_balance, crypto_trade_amount, datetime, last_row[0]))
     conn.commit()
     conn.close()
 
@@ -83,6 +106,10 @@ def find_ticker_price_at_specific_date_time_at_binance(pairs: List[str], date_ti
 
 database_file = 'C:\\AgodaGit\\binance-trade-bot\\data\\crypto_trading.db'
 purchase_time = '2022-11-09 22:57:00'
+alt_trade_amount = 63.73831045406546
+crypto_starting_balance = 754.1866
+crypto_trade_amount = 754.1866
+
 config_file_name = "../user.cfg"
 user_config_section = "binance_user_config"
 config = configparser.ConfigParser()
@@ -112,3 +139,5 @@ coin_price = find_ticker_price_at_specific_date_time_at_binance([s.symbol + 'USD
 coin_pairs = create_coin_pairs(coin_list, coin_price)
 print(coin_pairs)
 delete_and_reinsert_into_pairs_table(database_file, coin_pairs)
+update_last_row_in_trade_history_table(database_file, alt_trade_amount, crypto_starting_balance, crypto_trade_amount,
+                                       purchase_time)
