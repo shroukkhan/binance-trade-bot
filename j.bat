@@ -1,0 +1,1 @@
+jupyter notebook --port=8889 --NotebookApp.token='6c4bfd9ffd59618566557195d0f0a733f246545b8b118ca7'

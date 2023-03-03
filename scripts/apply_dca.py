@@ -6,7 +6,7 @@ from typing import List, Dict
 from binance import Client
 
 from binance_trade_bot.config import Config
-from binance_trade_bot.database import Pair, Database, Coin
+from binance_trade_bot.database import Pair, Database, Coin, Trade
 from binance_trade_bot.logger import Logger
 
 
@@ -29,6 +29,21 @@ def delete_and_reinsert_into_pairs_table(database: str, coin_pairs: List[Pair]) 
     insert_list = [(idx + 1, coin.from_coin.symbol, coin.to_coin.symbol, coin.ratio) for idx, coin in
                    enumerate(coin_pairs)]
     insert_command = "INSERT INTO %s VALUES (?,?,?,?)" % 'pairs'
+
+    cursor.executemany(insert_command, insert_list)
+    conn.commit()
+    conn.close()
+
+
+def insert_into_trade_history_table(database: str, coin_pairs: List[Trade]) -> List:
+    conn = sqlite3.connect(database)
+    # Use the connection to execute SQL queries
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM trade_history')
+    insert_list = [(idx + 1, coin.alt_coin_id, coin.crypto_coin_id, coin.selling, coin.state.value,
+                    coin.alt_starting_balance, coin.alt_trade_amount, coin.crypto_starting_balance,
+                    coin.crypto_trade_amount, coin.datetime) for idx, coin in enumerate(coin_pairs)]
+    insert_command = "INSERT INTO %s VALUES (?,?,?,?,?,?,?,?,?,?)" % 'trade_history'
 
     cursor.executemany(insert_command, insert_list)
     conn.commit()
