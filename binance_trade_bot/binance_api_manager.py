@@ -306,7 +306,7 @@ class BinanceAPIManager:  # pylint:disable=too-many-public-methods
 
     @cached(cache=TTLCache(maxsize=2000, ttl=43200))
     def get_min_notional(self, origin_symbol: str, target_symbol: str):
-        return float(self.get_symbol_filter(origin_symbol, target_symbol, "MIN_NOTIONAL")["minNotional"])
+        return float(self.get_symbol_filter(origin_symbol, target_symbol, "NOTIONAL")["minNotional"])
 
     def buy_alt(self, origin_coin: str, target_coin: str, buy_price: float) -> BinanceOrder:
         return self.retry(self._buy_alt, origin_coin, target_coin, buy_price)
