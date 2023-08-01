@@ -116,9 +116,9 @@ Please remember that this is a fork. To maintain the security of your API key it
 
 ### Build and run locally
 1. Clone this git to a location of your choice: 
-`git clone https://github.com/masaiasuose/binance-trade-bot tntwist-binance-trade-bot`
+`git clone https://github.com/masaiasuose/binance-trade-bot masaiasuose-binance-trade-bot`
 2. Change to the directory:
-`cd tntwist-binance-trade-bot`
+`cd masaiasuose-binance-trade-bot`
 3. Build the container locally (this may take a few minutes depending on your hardware):
 `docker build . -t masaiasuose-binance-trade-bot`
 4. Follow the steps in [Create user configuration](#create-user-configuration) to ensure you have created a `user.cfg` file in the directory created in step 2. If you have already done this, continue to step 5.
@@ -135,7 +135,7 @@ docker-compose up -d sqlitebrowser
 
 ## Bot-testing
 
-You can test the bot on historic data or with paper trading on live data to see how it performs. Papertrading is much faster but isn't as accurate as paper trading.
+You can test the bot on historic data with backtesting or with paper trading on live data to see how it performs. Backtesting is much faster but isn't as accurate as paper trading.
 
 ### Backtesting
 
