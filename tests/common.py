@@ -14,6 +14,15 @@ from binance_trade_bot.logger import Logger
 
 
 def rm_rf(paths: List[pathlib.Path]):
+    """
+    Recursively remove directories and their contents.
+
+    Args:
+        paths (List[pathlib.Path]): List of directory paths to be removed.
+
+    Returns:
+        None
+    """
     for path in paths:
         if path.exists():
             shutil.rmtree(path)
@@ -21,6 +30,20 @@ def rm_rf(paths: List[pathlib.Path]):
 
 @pytest.fixture(autouse=True)
 def infra(delete_ok=False, delete_ok_first=False, dirs=None):
+    """
+    Fixture for initializing infrastructure resources.
+
+    Args:
+        delete_ok (bool, optional): Flag indicating whether to delete the directories after the test. Defaults to False.
+        delete_ok_first (bool, optional): Flag indicating whether to delete the directories before the test. Defaults to False.
+        dirs (list, optional): List of directory paths to be created. Defaults to ["logs", "data"].
+
+    Yields:
+        None
+
+    Returns:
+        None
+    """
     dirs = [pathlib.Path(directory) for directory in dirs or ["logs", "data"]]
 
     if delete_ok_first:
@@ -37,6 +60,16 @@ def infra(delete_ok=False, delete_ok_first=False, dirs=None):
 
 @pytest.fixture()
 def dmlc():
+    """
+    Fixture for setting up a test environment with mock objects.
+
+    Returns:
+        Tuple: A tuple containing the following objects:
+            - db (MockDatabase): A mock database object.
+            - manager (MockBinanceManager): A mock Binance manager object.
+            - logger (Logger): A logger object.
+            - config (Config): A configuration object.
+    """
     logger: Logger = Logger(logging_service="guliguli")
     config: Config = Config()
     sqlite_cache = SqliteDict("data/testtest_cache.db")
