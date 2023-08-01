@@ -1,10 +1,12 @@
 import os
+import time
 
 import pytest
 import yaml
 
 from binance_trade_bot.notifications import NotificationHandler
 from .common import infra  # type: ignore
+from unittest.mock import MagicMock
 
 APPRISE_CONFIG_PATH = "config/apprise.yml"
 
@@ -31,6 +33,8 @@ def generate_apprise_config(infra):
         yield
 
 
+
+
 @pytest.fixture(scope='function')
 def notification_handler_enabled(generate_apprise_config):
     """
@@ -42,7 +46,8 @@ def notification_handler_enabled(generate_apprise_config):
     Returns:
         NotificationHandler: A NotificationHandler object with enabled=True.
     """
-    return NotificationHandler(enabled=True)
+
+    return NotificationHandler(enabled=True )
 
 
 def test_notification_handler_initialization_disabled():
@@ -67,7 +72,6 @@ def test_notification_handler_initialization_enabled(notification_handler_enable
     assert hasattr(notification_handler_enabled, "queue")
 
 
-@pytest.mark.skipif(not os.path.exists(APPRISE_CONFIG_PATH), reason="Apprise config not found")
 def test_send_notification(notification_handler_enabled):
     """
     Test case for sending a notification using a NotificationHandler object.
@@ -81,3 +85,20 @@ def test_send_notification(notification_handler_enabled):
     queue_item = notification_handler_enabled.queue.get()
 
     assert queue_item == (message, attachments)
+
+def test_process_queue(notification_handler_enabled):
+    """
+    Test case for processing the queue of a NotificationHandler object.
+
+    It asserts that the queue is processed correctly.
+    """
+    message = "Test message"
+    attachments = ["attachment.png"]
+
+    notification_handler_enabled.send_notification(message, attachments)
+    # before msg is sent, queue shold not be empty
+    assert notification_handler_enabled.queue.qsize() == 1
+    time.sleep(1)
+    # now queue should be empty
+    assert notification_handler_enabled.queue.qsize() == 0
+    

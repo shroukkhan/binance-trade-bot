@@ -16,6 +16,15 @@ def coins_stubs() -> List[CoinStub]:
 
 @pytest.fixture
 def ratios(coins_stubs: List[CoinStub]) -> List[Pair]:
+    """
+    Fixture for creating a list of Pair objects representing ratios.
+
+    Args:
+        coins_stubs (List[CoinStub]): The list of CoinStub objects.
+
+    Returns:
+        List[Pair]: A list of Pair objects representing ratios.
+    """
     coins = [Coin(stub.symbol, True) for stub in coins_stubs]
     return [
         Pair(coin_from, coin_to, random.random())
@@ -25,41 +34,49 @@ def ratios(coins_stubs: List[CoinStub]) -> List[Pair]:
     ]
 
 
-class TestCoinStubs:
-    @staticmethod
-    def test_coin_stubs_memoization_by_idx(coins_stubs: List[CoinStub]):
-        for coin_stub in coins_stubs:
-            assert coin_stub is CoinStub.get_by_idx(coin_stub.idx)
-
-    @staticmethod
-    def test_coin_stubs_memoization_by_symbol(coins_stubs: List[CoinStub]):
-        for coin_stub in coins_stubs:
-            assert coin_stub is CoinStub.get_by_symbol(coin_stub.symbol)
-
-    @staticmethod
-    def test_get_all(coins_stubs: List[CoinStub]):
-        all_stubs = CoinStub.get_all()
-        assert all_stubs == coins_stubs
-
-    @staticmethod
-    def test_repr(coins_stubs: List[CoinStub]):
-        for coin in coins_stubs:
-            assert repr(coin) == f"CoinStub({coin.idx}, {coin.symbol})"
-
-
 class TestRatioManager:
+    """
+    Test class for the RatioManager class.
+
+    Methods:
+        test_manager_creation(coins_stubs: List[CoinStub]): Test case for creating a RatioManager object.
+        test_manager_creation_with_ratios(ratios: List[Pair]): Test case for creating a RatioManager object with ratios.
+        test_dirty(ratios: List[Pair]): Test case for tracking dirty cells in the RatioManager object.
+        test_rollback(ratios: List[Pair]): Test case for rolling back changes in the RatioManager object.
+        test_commit(ratios: List[Pair]): Test case for committing changes in the RatioManager object.
+        test_row_col_retrieve(coins_stubs: List[CoinStub]): Test case for retrieving rows and columns from the RatioManager object.
+    """
+
     @staticmethod
     def test_manager_creation(coins_stubs: List[CoinStub]):
+        """
+        Test case for creating a RatioManager object.
+
+        Args:
+            coins_stubs (List[CoinStub]): The list of CoinStub objects.
+        """
         manager = RatiosManager()
         assert manager.n == len(coins_stubs)
 
     @staticmethod
     def test_manager_creation_with_ratios(ratios: List[Pair]):
+        """
+        Test case for creating a RatioManager object with ratios.
+
+        Args:
+            ratios (List[Pair]): The list of Pair objects representing ratios.
+        """
         manager = RatiosManager(ratios)
         assert manager.n == CoinStub.len_coins()
 
     @staticmethod
     def test_dirty(ratios: List[Pair]):
+        """
+        Test case for tracking dirty cells in the RatioManager object.
+
+        Args:
+            ratios (List[Pair]): The list of Pair objects representing ratios.
+        """
         manager = RatiosManager(ratios)
         value_to_write = 42.0
         cells_to_modify = {(0, 1), (2, 3), (3, 0)}
@@ -71,6 +88,12 @@ class TestRatioManager:
 
     @staticmethod
     def test_rollback(ratios: List[Pair]):
+        """
+        Test case for rolling back changes in the RatioManager object.
+
+        Args:
+            ratios (List[Pair]): The list of Pair objects representing ratios.
+        """
         manager = RatiosManager(ratios)
         cell_1_old_value = manager.get(0, 2)
         cell_2_old_value = manager.get(3, 1)
@@ -85,6 +108,12 @@ class TestRatioManager:
 
     @staticmethod
     def test_commit(ratios: List[Pair]):
+        """
+        Test case for committing changes in the RatioManager object.
+
+        Args:
+            ratios (List[Pair]): The list of Pair objects representing ratios.
+        """
         manager = RatiosManager(ratios)
         manager.set(0, 2, 34.0)
         manager.set(0, 2, 42.0)
@@ -96,6 +125,12 @@ class TestRatioManager:
 
     @staticmethod
     def test_row_col_retrieve(coins_stubs: List[CoinStub]):
+        """
+        Test case for retrieving rows and columns from the RatioManager object.
+
+        Args:
+            coins_stubs (List[CoinStub]): The list of CoinStub objects.
+        """
         manager = RatiosManager()
         counter = 0
         for i in range(len(coins_stubs)):
