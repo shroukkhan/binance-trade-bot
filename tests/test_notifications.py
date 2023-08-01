@@ -11,6 +11,15 @@ APPRISE_CONFIG_PATH = "config/apprise.yml"
 
 @pytest.fixture()
 def generate_apprise_config(infra):
+    """
+    Fixture for generating an Apprise configuration file.
+
+    Args:
+        infra: The infrastructure fixture.
+
+    Yields:
+        None
+    """
     data = {
         'version': 1,
         'urls': [
@@ -24,15 +33,35 @@ def generate_apprise_config(infra):
 
 @pytest.fixture(scope='function')
 def notification_handler_enabled(generate_apprise_config):
+    """
+    Fixture for creating a NotificationHandler object with enabled=True.
+
+    Args:
+        generate_apprise_config: The generate_apprise_config fixture.
+
+    Returns:
+        NotificationHandler: A NotificationHandler object with enabled=True.
+    """
     return NotificationHandler(enabled=True)
 
 
 def test_notification_handler_initialization_disabled():
+    """
+    Test case for initializing a NotificationHandler object with enabled=False.
+
+    It asserts that the NotificationHandler's enabled attribute is False.
+    """
     notification_handler = NotificationHandler(False)
     assert not notification_handler.enabled
 
 
 def test_notification_handler_initialization_enabled(notification_handler_enabled):
+    """
+    Test case for initializing a NotificationHandler object with enabled=True.
+
+    It asserts that the NotificationHandler's enabled attribute is True,
+    and that it has the "apobj" and "queue" attributes.
+    """
     assert notification_handler_enabled.enabled
     assert hasattr(notification_handler_enabled, "apobj")
     assert hasattr(notification_handler_enabled, "queue")
@@ -40,6 +69,11 @@ def test_notification_handler_initialization_enabled(notification_handler_enable
 
 @pytest.mark.skipif(not os.path.exists(APPRISE_CONFIG_PATH), reason="Apprise config not found")
 def test_send_notification(notification_handler_enabled):
+    """
+    Test case for sending a notification using a NotificationHandler object.
+
+    It asserts that the notification is added to the queue correctly.
+    """
     message = "Test message"
     attachments = ["attachment.png"]
 
