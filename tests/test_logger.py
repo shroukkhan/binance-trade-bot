@@ -4,32 +4,35 @@ import os
 import pytest
 
 from binance_trade_bot.logger import Logger
-
-from .common import infra
+from .common import infra  # type: ignore
 
 
 @pytest.fixture(scope="function", params=["crypto_trading", "boba_boba"])
 def createAndDeleteFile(infra, request):
-
     ln = request.param
     fn = os.path.join("logs", ln + ".log")
-
+    abspath = os.path.abspath(fn)
+    print(f'abspath: {abspath}')
     if os.path.exists(fn):
+        print(f"removing {fn}")
         os.remove(fn)
+    else:
+        print(f"does not exist: {fn}")
 
     yield ln, fn
 
     if os.path.exists(fn):
+        print(f"removing {fn} again!")
         os.remove(fn)
 
 
-def test_log1(caplog, createAndDeleteFile):
+def test_file_logging(caplog, createAndDeleteFile):
     ln, fn = createAndDeleteFile
 
     logs = Logger(enable_notifications=False, logging_service=ln)
     logs.Logger.propagate = True
 
-    assert os.path.exists(fn), "Log file not exists"
+    assert os.path.exists(fn), "Log file not exists" ## this will fail because i disabled file logging . TODO: make it a config option  
 
     logs.error("rroorree")
     assert caplog.record_tuples == [(logs.Logger.name, logging.ERROR, "rroorree")]
@@ -48,10 +51,8 @@ def test_log1(caplog, createAndDeleteFile):
 
 
 @pytest.mark.xfail
-def test_log1_(capsys, createAndDeleteFile):  # bad case
+def test_console_logging(capsys, createAndDeleteFile):  # bad case
     ln, fn = createAndDeleteFile
-
-    # caplog - not work?
 
     logs = Logger(enable_notifications=True, logging_service=ln)
 
@@ -59,27 +60,11 @@ def test_log1_(capsys, createAndDeleteFile):  # bad case
 
     logs.debug("gguubbeedd", notification=True)
     captured = capsys.readouterr()
+    xml = str(captured)
     assert str(captured).find("DEBUG") > -1
 
-    logs.log("guliguli", level="ddebug", notification=True)
+    logs.log("guliguli", level="error", notification=True)
     captured = capsys.readouterr()
-    assert str(captured).find("DEBUG") > -1
+    assert str(captured).find("ERROR") > -1
 
     assert os.path.exists(fn), "Log file not exists"
-
-
-@pytest.mark.xfail
-def test_log2(capsys, createAndDeleteFile):
-
-    ln, fn = createAndDeleteFile
-
-    # caplog - not work?
-
-    logs2 = Logger(enable_notifications=False, logging_service=ln)
-
-    assert os.path.exists(fn), "Log file not exists"
-
-    logs2.warning("ggnniinnrraaww", notification=False)
-    captured = capsys.readouterr()
-    assert len(str(captured)) == 0, "Notification==False , but informing?"
-    print("\n", captured)

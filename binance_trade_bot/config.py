@@ -8,7 +8,7 @@ USER_CFG_SECTION = "binance_user_config"
 
 
 class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
-    def __init__(self, config_file_path: str = None):
+    def __init__(self, config_file_path: str = None , supported_coin_list_path:str= None):
         # Init config
         config = configparser.ConfigParser()
         config["DEFAULT"] = {

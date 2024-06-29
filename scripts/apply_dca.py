@@ -22,17 +22,27 @@ from binance_trade_bot.logger import Logger
 #     return results
 
 def delete_and_reinsert_into_pairs_table(database: str, coin_pairs: List[Pair]) -> List:
+    """
+    Delete all records from the 'pairs' table in the specified database and reinsert the given coin pairs.
+
+    Args:
+        database (str): The path to the SQLite database file.
+        coin_pairs (List[Pair]): A list of Pair objects representing the coin pairs to be inserted.
+
+    Returns:
+        List: An empty list.
+
+    """
     conn = sqlite3.connect(database)
-    # Use the connection to execute SQL queries
     cursor = conn.cursor()
     cursor.execute('DELETE FROM pairs')
     insert_list = [(idx + 1, coin.from_coin.symbol, coin.to_coin.symbol, coin.ratio) for idx, coin in
                    enumerate(coin_pairs)]
     insert_command = "INSERT INTO %s VALUES (?,?,?,?)" % 'pairs'
-
     cursor.executemany(insert_command, insert_list)
     conn.commit()
     conn.close()
+
 
 
 def insert_into_trade_history_table(database: str, coin_pairs: List[Trade]) -> List:
@@ -55,7 +65,28 @@ def update_last_row_in_trade_history_table(database: str,
                                            crypto_starting_balance: float,
                                            crypto_trade_amount: float,
                                            datetime: str):
-    '''
+    '''def delete_and_reinsert_into_pairs_table(database: str, coin_pairs: List[Pair]) -> List:
+    """
+    Delete all records from the 'pairs' table in the specified database and reinsert the given coin pairs.
+
+    Args:
+        database (str): The path to the SQLite database file.
+        coin_pairs (List[Pair]): A list of Pair objects representing the coin pairs to be inserted.
+
+    Returns:
+        List: An empty list.
+
+    """
+    conn = sqlite3.connect(database)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM pairs')
+    insert_list = [(idx + 1, coin.from_coin.symbol, coin.to_coin.symbol, coin.ratio) for idx, coin in
+                   enumerate(coin_pairs)]
+    insert_command = "INSERT INTO %s VALUES (?,?,?,?)" % 'pairs'
+    cursor.executemany(insert_command, insert_list)
+    conn.commit()
+    conn.close()
+
     1. Select last row from table trade_history
     2. Update the row with new values
     '''
