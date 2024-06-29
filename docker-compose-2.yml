@@ -65,7 +65,7 @@ services:
       - ./config2:/binance-trade-bot/config
       - ./data2:/binance-trade-bot/data
       - ./telegrambot/btb_manager_telegram:/binance-trade-bot/btb_manager_telegram
-      - ./telegrambot/i18n:/binance-trade-bot/i18n
+      - ./telegrambot/locales:/binance-trade-bot/locales
       - ./telegrambot/custom_scripts:/binance-trade-bot/custom_scripts
     command: python -m btb_manager_telegram -p ./
     # python -m btb_manager_telegram -p /binance-trade-bot
