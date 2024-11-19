@@ -133,6 +133,7 @@ class Database:
             if current_coin is None:
                 return None
             coin = current_coin.coin
+            session.expunge(current_coin)
             session.expunge(coin)
             return coin
 
