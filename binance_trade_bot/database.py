@@ -224,19 +224,24 @@ class Database:
                 CoinValue.interval == Interval.MINUTELY, CoinValue.datetime < time_diff
             ).delete()
 
-            # The last 28 days worth of hourly entries will be kept, so count(coins) * 672 entries
-            time_diff = datetime.now() - timedelta(days=28)
+            # The last 14 days worth of hourly entries will be kept, so count(coins) * 672 entries
+            time_diff = datetime.now() - timedelta(days=14)
             session.query(CoinValue).filter(
                 CoinValue.interval == Interval.HOURLY, CoinValue.datetime < time_diff
             ).delete()
 
             # The last years worth of daily entries will be kept, so count(coins) * 365 entries
-            time_diff = datetime.now() - timedelta(days=365)
+            time_diff = datetime.now() - timedelta(days=30)
             session.query(CoinValue).filter(
                 CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
             ).delete()
+            
+            # last years worth of weekly entries will be kept, so count(coins) * 52 entries
+            time_diff = datetime.now() - timedelta(days=90)
+            session.query(CoinValue).filter(
+                CoinValue.interval == Interval.WEEKLY, CoinValue.datetime < time_diff
+            ).delete()
 
-            # All weekly entries will be kept forever
 
     def create_database(self):
         Base.metadata.create_all(self.engine)
